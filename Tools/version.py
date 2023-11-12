@@ -56,7 +56,7 @@ def write_version(version: str, file_only: bool):
 
     if not file_only:
         # Commit
-        subprocess.run(["git", "commit", "--allow-empty", "-m", "Version: " + version, "MSBuild/Robust.Engine.Version.props", "RELEASE-NOTES.md"], check=True)
+        subprocess.run(["git", "commit", "--allow-empty", "-m", "Version: " + version, "MSBuild/Robust.Engine.Version.props", "RELEASE-NOTES-SSMV.md"], check=True)
 
         # Tag
         subprocess.run(["git", "tag", "v" + version], check=True)
@@ -66,7 +66,7 @@ def write_version(version: str, file_only: bool):
 
 
 def update_release_notes(version: str):
-    with open("RELEASE-NOTES.md", "r") as file:
+    with open("RELEASE-NOTES-SSMV.md", "r") as file:
         lines = file.readlines()
 
     template_start = lines.index("<!--START TEMPLATE\n")
@@ -92,7 +92,7 @@ def update_release_notes(version: str):
     # Insert template above newest version.
     lines[master_header : master_header] = template_lines
 
-    with open("RELEASE-NOTES.md", "w") as file:
+    with open("RELEASE-NOTES-SSMV.md", "w") as file:
         file.writelines(lines)
 
 
