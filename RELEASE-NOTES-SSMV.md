@@ -54,6 +54,9 @@ END TEMPLATE-->
 *None yet*
 
 
+## 0.0.2
+
+
 ## 0.0.1
 
 ### Internal
