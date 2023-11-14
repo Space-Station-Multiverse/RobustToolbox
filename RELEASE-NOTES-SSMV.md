@@ -54,6 +54,13 @@ END TEMPLATE-->
 *None yet*
 
 
+## 0.0.4
+
+### Internal
+
+(Testing/ignore -- build pipeline test)
+
+
 ## 0.0.3
 
 (Testing/ignore -- getting build pipeline set up)
