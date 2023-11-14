@@ -59,8 +59,8 @@ def write_version(version: str, file_only: bool):
         subprocess.run(["git", "commit", "--allow-empty", "-m", "Version: " + version, "MSBuild/Robust.Engine.Version.props", "RELEASE-NOTES.md"], check=True)
 
         # Tag
-        subprocess.run(["git", "tag", "v" + version], check=True)
-        print("Tagged as v" + version)
+        subprocess.run(["git", "tag", "mv-" + version], check=True)
+        print("Tagged as mv-" + version)
     else:
         print("Did not tag " + version)
 
@@ -103,7 +103,7 @@ def undo_version(version: str):
         sys.exit(1)
 
     # Delete the version (good verification all by itself really)
-    subprocess.run(["git", "tag", "-d", "v" + version], check=True)
+    subprocess.run(["git", "tag", "-d", "mv-" + version], check=True)
     # Tag the commit we're about to delete because we could be deleting the wrong thing.
     savename = "version-undo-backup-" + str(int(time.time()))
     subprocess.run(["git", "tag", savename], check=True)
