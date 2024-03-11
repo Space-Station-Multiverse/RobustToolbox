@@ -54,7 +54,7 @@ END TEMPLATE-->
 *None yet*
 
 
-## 0.0.6
+## 0.1.0
 
 * Updated to upstream 213.0.0
 
