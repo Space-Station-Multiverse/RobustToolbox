@@ -9,6 +9,7 @@ cmd-parse-failure-float = {$arg} is not a valid float.
 cmd-parse-failure-bool = {$arg} is not a valid bool.
 cmd-parse-failure-uid = {$arg} is not a valid entity UID.
 cmd-parse-failure-mapid = {$arg} is not a valid MapId.
+cmd-parse-failure-grid = {$arg} is not a valid grid.
 cmd-parse-failure-entity-exist = UID {$arg} does not correspond to an existing entity.
 
 cmd-error-file-not-found = Could not find file: {$file}.
@@ -489,7 +490,7 @@ cmd-net_entityreport-help = Usage: net_entityreport
 cmd-net_refresh-desc = Requests a full server state.
 cmd-net_refresh-help = Usage: net_refresh
 
-cmd-net_graph-desc = Toggles the net statistics pannel.
+cmd-net_graph-desc = Toggles the net statistics panel.
 cmd-net_graph-help = Usage: net_graph
 
 cmd-net_watchent-desc = Dumps all network updates for an EntityId to the console.

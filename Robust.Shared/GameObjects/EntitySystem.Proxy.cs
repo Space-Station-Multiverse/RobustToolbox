@@ -141,9 +141,7 @@ public partial class EntitySystem
         EntityManager.Dirty(component.Owner, component, meta);
     }
 
-    /// <summary>
-    ///     Marks a component as dirty. This also implicitly dirties the entity this component belongs to.
-    /// </summary>
+    /// <inheritdoc cref="Dirty{T}"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected void Dirty(EntityUid uid, IComponent component, MetaDataComponent? meta = null)
     {
@@ -160,20 +158,37 @@ public partial class EntitySystem
         if (comp == null && !EntityManager.TryGetComponent(ent.Owner, out comp))
             return;
 
-        EntityManager.Dirty(ent.Owner, comp, meta);
+        EntityManager.Dirty(ent, comp, meta);
     }
 
-    /// <summary>
-    ///     Marks a component as dirty. This also implicitly dirties the entity this component belongs to.
-    /// </summary>
+    /// <inheritdoc cref="Dirty{T}"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected void Dirty<T>(Entity<T, MetaDataComponent> ent) where T : IComponent?
+    protected void Dirty<T1, T2>(Entity<T1, T2> ent, MetaDataComponent? meta = null)
+        where T1 : IComponent
+        where T2 : IComponent
     {
-        var comp = ent.Comp1;
-        if (comp == null && !EntityManager.TryGetComponent(ent.Owner, out comp))
-            return;
+        EntityManager.Dirty(ent, meta);
+    }
 
-        EntityManager.Dirty(ent.Owner, comp, ent.Comp2);
+    /// <inheritdoc cref="Dirty{T}"/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected void Dirty<T1, T2, T3>(Entity<T1, T2, T3> ent, MetaDataComponent? meta = null)
+        where T1 : IComponent
+        where T2 : IComponent
+        where T3 : IComponent
+    {
+        EntityManager.Dirty(ent, meta);
+    }
+
+    /// <inheritdoc cref="Dirty{T}"/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected void Dirty<T1, T2, T3, T4>(Entity<T1, T2, T3, T4> ent, MetaDataComponent? meta = null)
+        where T1 : IComponent
+        where T2 : IComponent
+        where T3 : IComponent
+        where T4 : IComponent
+    {
+        EntityManager.Dirty(ent, meta);
     }
 
     /// <summary>
@@ -371,12 +386,12 @@ public partial class EntitySystem
     /// <inheritdoc cref="IEntityManager.ToPrettyString(EntityUid, MetaDataComponent?)"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected EntityStringRepresentation ToPrettyString(EntityUid uid, MetaDataComponent? metadata)
-        => EntityManager.ToPrettyString(uid, metadata);
+        => EntityManager.ToPrettyString((uid, metadata));
 
     /// <inheritdoc cref="IEntityManager.ToPrettyString(EntityUid, MetaDataComponent?)"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected EntityStringRepresentation ToPrettyString(EntityUid uid)
-        => EntityManager.ToPrettyString(uid);
+    protected EntityStringRepresentation ToPrettyString(Entity<MetaDataComponent?> entity)
+        => EntityManager.ToPrettyString(entity);
 
     /// <inheritdoc cref="IEntityManager.ToPrettyString(EntityUid, MetaDataComponent?)"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -525,7 +540,7 @@ public partial class EntitySystem
     ///     Retrieves whether the entity has the specified component or not.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected bool HasComp<T>(EntityUid uid)
+    protected bool HasComp<T>(EntityUid uid) where T : IComponent
     {
         return EntityManager.HasComponent<T>(uid);
     }
@@ -543,7 +558,7 @@ public partial class EntitySystem
     ///     Retrieves whether the entity has the specified component or not.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected bool HasComp<T>([NotNullWhen(true)] EntityUid? uid)
+    protected bool HasComp<T>([NotNullWhen(true)] EntityUid? uid) where T : IComponent
     {
         return EntityManager.HasComponent<T>(uid);
     }
@@ -614,13 +629,6 @@ public partial class EntitySystem
         return EntityManager.RemoveComponentDeferred(uid, type);
     }
 
-    /// <inheritdoc cref="IEntityManager.RemoveComponentDeferred(EntityUid, Component)"/>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected void RemCompDeferred(EntityUid uid, Component component)
-    {
-        EntityManager.RemoveComponentDeferred(uid, component);
-    }
-
     /// <inheritdoc cref="IEntityManager.RemoveComponentDeferred(EntityUid, IComponent)"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected void RemCompDeferred(EntityUid uid, IComponent component)
@@ -661,13 +669,6 @@ public partial class EntitySystem
     protected bool RemComp(EntityUid uid, Type type)
     {
         return EntityManager.RemoveComponent(uid, type);
-    }
-
-    /// <inheritdoc cref="IEntityManager.RemoveComponent(EntityUid, Component)"/>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected void RemComp(EntityUid uid, Component component)
-    {
-        EntityManager.RemoveComponent(uid, component);
     }
 
     /// <inheritdoc cref="IEntityManager.RemoveComponent(EntityUid, IComponent)"/>
@@ -941,13 +942,19 @@ public partial class EntitySystem
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool TryGetEntity(NetEntity nEntity, [NotNullWhen(true)] out EntityUid? entity)
+    protected bool IsClientSide(Entity<MetaDataComponent> entity)
+    {
+        return EntityManager.IsClientSide(entity, entity.Comp);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected bool TryGetEntity(NetEntity nEntity, [NotNullWhen(true)] out EntityUid? entity)
     {
         return EntityManager.TryGetEntity(nEntity, out entity);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool TryGetEntity(NetEntity? nEntity, [NotNullWhen(true)] out EntityUid? entity)
+    protected bool TryGetEntity(NetEntity? nEntity, [NotNullWhen(true)] out EntityUid? entity)
     {
         return EntityManager.TryGetEntity(nEntity, out entity);
     }
@@ -1040,6 +1047,42 @@ public partial class EntitySystem
     protected void EnsureEntityList<T>(List<NetEntity> netEntities, EntityUid callerEntity, List<EntityUid> entities)
     {
         EntityManager.EnsureEntityList<T>(netEntities, callerEntity, entities);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected void EnsureEntityDictionary<TComp, TValue>(Dictionary<NetEntity, TValue> netEntities, EntityUid callerEntity, Dictionary<EntityUid, TValue> entities)
+    {
+        EntityManager.EnsureEntityDictionary<TComp, TValue>(netEntities, callerEntity, entities);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected void EnsureEntityDictionaryNullableValue<TComp, TValue>(Dictionary<NetEntity, TValue?> netEntities, EntityUid callerEntity, Dictionary<EntityUid, TValue?> entities)
+    {
+        EntityManager.EnsureEntityDictionaryNullableValue<TComp, TValue>(netEntities, callerEntity, entities);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected void EnsureEntityDictionary<TComp, TKey>(Dictionary<TKey, NetEntity> netEntities, EntityUid callerEntity, Dictionary<TKey, EntityUid> entities) where TKey : notnull
+    {
+        EntityManager.EnsureEntityDictionary<TComp, TKey>(netEntities, callerEntity, entities);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected void EnsureEntityDictionary<TComp, TKey>(Dictionary<TKey, NetEntity?> netEntities, EntityUid callerEntity, Dictionary<TKey, EntityUid?> entities) where TKey : notnull
+    {
+        EntityManager.EnsureEntityDictionary<TComp, TKey>(netEntities, callerEntity, entities);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected void EnsureEntityDictionary<TComp>(Dictionary<NetEntity, NetEntity> netEntities, EntityUid callerEntity, Dictionary<EntityUid, EntityUid> entities)
+    {
+        EntityManager.EnsureEntityDictionary<TComp>(netEntities, callerEntity, entities);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected void EnsureEntityDictionary<TComp>(Dictionary<NetEntity, NetEntity?> netEntities, EntityUid callerEntity, Dictionary<EntityUid, EntityUid?> entities)
+    {
+        EntityManager.EnsureEntityDictionary<TComp>(netEntities, callerEntity, entities);
     }
 
     /// <summary>
@@ -1175,6 +1218,96 @@ public partial class EntitySystem
     protected EntityUid?[] GetEntityArray(NetEntity?[] netEntities)
     {
         return EntityManager.GetEntityArray(netEntities);
+    }
+
+    /// <summary>
+    ///     Returns the <see cref="NetEntity"/> versions of the supplied entities.  Logs an error if the entities do not exist.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected Dictionary<NetEntity, T> GetNetEntityDictionary<T>(Dictionary<EntityUid, T> uids)
+    {
+        return EntityManager.GetNetEntityDictionary(uids);
+    }
+
+    /// <summary>
+    ///     Returns the <see cref="NetEntity"/> versions of the supplied entities.  Logs an error if the entities do not exist.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected Dictionary<T, NetEntity> GetNetEntityDictionary<T>(Dictionary<T, EntityUid> uids) where T : notnull
+    {
+        return EntityManager.GetNetEntityDictionary(uids);
+    }
+
+    /// <summary>
+    ///     Returns the <see cref="NetEntity"/> versions of the supplied entities.  Logs an error if the entities do not exist.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected Dictionary<T, NetEntity?> GetNetEntityDictionary<T>(Dictionary<T, EntityUid?> uids) where T : notnull
+    {
+        return EntityManager.GetNetEntityDictionary(uids);
+    }
+
+    /// <summary>
+    ///     Returns the <see cref="NetEntity"/> versions of the supplied entities.  Logs an error if the entities do not exist.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected Dictionary<NetEntity, NetEntity> GetNetEntityDictionary(Dictionary<EntityUid, EntityUid> uids)
+    {
+        return EntityManager.GetNetEntityDictionary(uids);
+    }
+
+    /// <summary>
+    ///     Returns the <see cref="NetEntity"/> versions of the supplied entities.  Logs an error if the entities do not exist.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected Dictionary<NetEntity, NetEntity?> GetNetEntityDictionary(Dictionary<EntityUid, EntityUid?> uids)
+    {
+        return EntityManager.GetNetEntityDictionary(uids);
+    }
+
+    /// <summary>
+    ///     Returns the <see cref="EntityUid"/> versions of the supplied <see cref="NetEntity"/>. Returns <see cref="EntityUid.Invalid"/> if it doesn't exist.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected Dictionary<EntityUid, T> GetEntityDictionary<T>(Dictionary<NetEntity, T> uids)
+    {
+        return EntityManager.GetEntityDictionary(uids);
+    }
+
+    /// <summary>
+    ///     Returns the <see cref="EntityUid"/> versions of the supplied <see cref="NetEntity"/>. Returns <see cref="EntityUid.Invalid"/> if it doesn't exist.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected Dictionary<T, EntityUid> GetEntityDictionary<T>(Dictionary<T, NetEntity> uids) where T : notnull
+    {
+        return EntityManager.GetEntityDictionary(uids);
+    }
+
+    /// <summary>
+    ///     Returns the <see cref="EntityUid"/> versions of the supplied <see cref="NetEntity"/>. Returns <see cref="EntityUid.Invalid"/> if it doesn't exist.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected Dictionary<T, EntityUid?> GetEntityDictionary<T>(Dictionary<T, NetEntity?> uids) where T : notnull
+    {
+        return EntityManager.GetEntityDictionary(uids);
+    }
+
+    /// <summary>
+    ///     Returns the <see cref="EntityUid"/> versions of the supplied <see cref="NetEntity"/>. Returns <see cref="EntityUid.Invalid"/> if it doesn't exist.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected Dictionary<EntityUid, EntityUid> GetEntityDictionary(Dictionary<NetEntity, NetEntity> uids)
+    {
+        return EntityManager.GetEntityDictionary(uids);
+    }
+
+    /// <summary>
+    ///     Returns the <see cref="EntityUid"/> versions of the supplied <see cref="NetEntity"/>. Returns <see cref="EntityUid.Invalid"/> if it doesn't exist.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected Dictionary<EntityUid, EntityUid?> GetEntityDictionary(Dictionary<NetEntity, NetEntity?> uids)
+    {
+        return EntityManager.GetEntityDictionary(uids);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -40,6 +40,16 @@ public partial class EntityManager
         return ents;
     }
 
+    public EntityUid[] SpawnEntities(MapCoordinates coordinates, string? prototype, int count)
+    {
+        var ents = new EntityUid[count];
+        for (var i = 0; i < count; i++)
+        {
+            ents[i] = Spawn(prototype, coordinates);
+        }
+        return ents;
+    }
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public EntityUid[] SpawnEntitiesAttachedTo(EntityCoordinates coordinates, List<string?> protoNames)
     {
@@ -119,7 +129,7 @@ public partial class EntityManager
                 continue;
 
             uid = Spawn(protoName, overrides);
-            if (container.Insert(uid.Value, this))
+            if (_containers.Insert(uid.Value, container))
                 return true;
 
             DeleteEntity(uid.Value);
@@ -147,7 +157,7 @@ public partial class EntityManager
 
         uid = Spawn(protoName, overrides);
 
-        if (container.Insert(uid.Value, this))
+        if (_containers.Insert(uid.Value, container))
             return true;
 
         DeleteEntity(uid.Value);
@@ -178,7 +188,7 @@ public partial class EntityManager
 
         if ((containerComp == null && !TryGetComponent(containerUid, out containerComp))
              || !containerComp.Containers.TryGetValue(containerId, out var container)
-             || !container.Insert(uid, this))
+             || !_containers.Insert(uid, container))
         {
 
             xform ??= TransformQuery.GetComponent(containerUid);

@@ -127,7 +127,31 @@ public abstract partial class SharedMapSystem
         SubscribeLocalEvent<MapGridComponent, MoveEvent>(OnGridMove);
     }
 
-    public void OnGridBoundsChange(EntityUid uid, MapGridComponent component)
+    /// <summary>
+    /// <see cref="GetGridPosition(Robust.Shared.GameObjects.Entity{Robust.Shared.Physics.Components.PhysicsComponent?},System.Numerics.Vector2,Robust.Shared.Maths.Angle)"/>
+    /// </summary>
+    public Vector2 GetGridPosition(Entity<PhysicsComponent?> grid, Vector2 worldPos, Angle worldRot)
+    {
+        if (!Resolve(grid.Owner, ref grid.Comp))
+            return Vector2.Zero;
+
+        return worldPos + worldRot.RotateVec(grid.Comp.LocalCenter);
+    }
+
+    /// <summary>
+    /// Gets the mapgrid's position considering its local physics center.
+    /// </summary>
+    public Vector2 GetGridPosition(Entity<PhysicsComponent?, TransformComponent?> grid)
+    {
+        if (!Resolve(grid.Owner, ref grid.Comp1, ref grid.Comp2))
+            return Vector2.Zero;
+
+        var (worldPos, worldRot) = _transform.GetWorldPositionRotation(grid.Comp2);
+
+        return GetGridPosition((grid.Owner, grid.Comp1), worldPos, worldRot);
+    }
+
+    private void OnGridBoundsChange(EntityUid uid, MapGridComponent component)
     {
         // Just MapLoader things.
         if (component.MapProxy == DynamicTree.Proxy.Free) return;
@@ -173,37 +197,49 @@ public abstract partial class SharedMapSystem
 
     private void OnParentChange(EntityUid uid, MapGridComponent component, ref MoveEvent args)
     {
-        if (EntityManager.HasComponent<MapComponent>(uid))
-            return;
+        UpdatePvsChunks(args.Entity);
 
-        var lifestage = EntityManager.GetComponent<MetaDataComponent>(uid).EntityLifeStage;
+        var (_, xform, meta) = args.Entity;
 
         // oh boy
         // Want gridinit to handle this hence specialcase those situations.
         // oh boy oh boy, its even worse now.
         // transform now raises parent change events on startup, because container code is a POS.
-        if (lifestage < EntityLifeStage.Initialized || args.Component.LifeStage == ComponentLifeStage.Starting)
+        if (meta.EntityLifeStage < EntityLifeStage.Initialized || args.Component.LifeStage == ComponentLifeStage.Starting)
             return;
 
+        // yipeee grids are being spontaneously moved to nullspace.
+        Log.Info($"Grid {ToPrettyString(uid, meta)} changed parent. Old parent: {ToPrettyString(args.OldPosition.EntityId)}. New parent: {ToPrettyString(xform.ParentUid)}");
+        if (xform.MapUid == null && meta.EntityLifeStage < EntityLifeStage.Terminating && _netManager.IsServer)
+            Log.Error($"Grid {ToPrettyString(uid, meta)} was moved to nullspace! AAAAAAAAAAAAAAAAAAAAAAAAA! {Environment.StackTrace}");
+
+        DebugTools.Assert(!_mapQuery.HasComponent(uid));
+
+        if (xform.ParentUid != xform.MapUid && meta.EntityLifeStage < EntityLifeStage.Terminating  && _netManager.IsServer)
+        {
+            Log.Error($"Grid {ToPrettyString(uid, meta)} is not parented to {ToPrettyString(xform._parent)} which is not a map.  y'all need jesus. {Environment.StackTrace}");
+            return;
+        }
+
         // Make sure we cleanup old map for moved grid stuff.
-        var mapId = args.Component.MapID;
         var oldMap = args.OldPosition.ToMap(EntityManager, _transform);
-
-        // y'all need jesus
-        if (oldMap.MapId == mapId) return;
-
-        if (component.MapProxy != DynamicTree.Proxy.Free && TryComp<MovedGridsComponent>(MapManager.GetMapEntityId(oldMap.MapId), out var oldMovedGrids))
+        var oldMapUid = MapManager.GetMapEntityId(oldMap.MapId);
+        if (component.MapProxy != DynamicTree.Proxy.Free && TryComp<MovedGridsComponent>(oldMapUid, out var oldMovedGrids))
         {
             oldMovedGrids.MovedGrids.Remove(uid);
-            RemoveGrid(uid, component, MapManager.GetMapEntityId(oldMap.MapId));
+            RemoveGrid(uid, component, oldMapUid);
         }
 
         DebugTools.Assert(component.MapProxy == DynamicTree.Proxy.Free);
-        if (TryComp<MovedGridsComponent>(MapManager.GetMapEntityId(mapId), out var newMovedGrids))
+        if (TryComp<MovedGridsComponent>(xform.MapUid, out var newMovedGrids))
         {
             newMovedGrids.MovedGrids.Add(uid);
-            AddGrid(uid, component, mapId);
+            AddGrid(uid, component);
         }
+    }
+
+    protected virtual void UpdatePvsChunks(Entity<TransformComponent, MetaDataComponent> grid)
+    {
     }
 
     private void OnGridHandleState(EntityUid uid, MapGridComponent component, ref ComponentHandleState args)
@@ -215,8 +251,6 @@ public abstract partial class SharedMapSystem
             "Can't modify chunk size of an existing grid.");
 
         component.ChunkSize = state.ChunkSize;
-        DebugTools.Assert(state.ChunkData != null || state.FullGridData != null);
-
         if (state.ChunkData == null && state.FullGridData == null)
             return;
 
@@ -429,8 +463,7 @@ public abstract partial class SharedMapSystem
 
     private void OnGridInit(EntityUid uid, MapGridComponent component, ComponentInit args)
     {
-        var xformQuery = GetEntityQuery<TransformComponent>();
-        var xform = xformQuery.GetComponent(uid);
+        var xform = _xformQuery.GetComponent(uid);
 
         // Force networkedmapmanager to send it due to non-ECS legacy code.
         var curTick = _timing.CurTick;
@@ -443,9 +476,9 @@ public abstract partial class SharedMapSystem
         component.LastTileModifiedTick = curTick;
 
         if (xform.MapUid != null && xform.MapUid != uid)
-            _transform.SetParent(uid, xform, xform.MapUid.Value, xformQuery);
+            _transform.SetParent(uid, xform, xform.MapUid.Value);
 
-        if (!HasComp<MapComponent>(uid))
+        if (!_mapQuery.HasComponent(uid))
         {
             var aabb = GetWorldAABB(uid, component);
 
@@ -474,6 +507,7 @@ public abstract partial class SharedMapSystem
 
     private void OnGridRemove(EntityUid uid, MapGridComponent component, ComponentShutdown args)
     {
+        Log.Info($"Removing grid {ToPrettyString(uid)}");
         if (TryComp<TransformComponent>(uid, out var xform) && xform.MapUid != null)
         {
             RemoveGrid(uid, component, xform.MapUid.Value);
@@ -494,9 +528,9 @@ public abstract partial class SharedMapSystem
         return new Box2Rotated(aabb, worldRot, worldPos).CalcBoundingBox();
     }
 
-    private void AddGrid(EntityUid uid, MapGridComponent grid, MapId mapId)
+    private void AddGrid(EntityUid uid, MapGridComponent grid)
     {
-        DebugTools.Assert(!EntityManager.HasComponent<MapComponent>(uid));
+        DebugTools.Assert(!_mapQuery.HasComponent(uid));
         var aabb = GetWorldAABB(uid, grid);
 
         if (!_xformQuery.TryGetComponent(uid, out var xform))
@@ -710,6 +744,21 @@ public abstract partial class SharedMapSystem
     public GridTileEnumerator GetAllTilesEnumerator(EntityUid uid, MapGridComponent grid, bool ignoreEmpty = true)
     {
         return new GridTileEnumerator(uid, grid.Chunks.GetEnumerator(), grid.ChunkSize, ignoreEmpty);
+    }
+
+    public void SetTile(Entity<MapGridComponent> grid, EntityCoordinates coordinates, Tile tile)
+    {
+        SetTile(grid.Owner, grid.Comp, coordinates, tile);
+    }
+
+    public void SetTile(Entity<MapGridComponent> grid, Vector2i gridIndices, Tile tile)
+    {
+        SetTile(grid.Owner, grid.Comp, gridIndices, tile);
+    }
+
+    public void SetTiles(Entity<MapGridComponent> grid, List<(Vector2i GridIndices, Tile Tile)> tiles)
+    {
+        SetTiles(grid.Owner, grid.Comp, tiles);
     }
 
     public void SetTile(EntityUid uid, MapGridComponent grid, EntityCoordinates coords, Tile tile)
@@ -949,19 +998,34 @@ public abstract partial class SharedMapSystem
     internal ChunkEnumerator GetMapChunks(EntityUid uid, MapGridComponent grid, Box2 worldAABB)
     {
         var localAABB = _transform.GetInvWorldMatrix(uid).TransformBox(worldAABB);
-        return new ChunkEnumerator(grid.Chunks, localAABB, grid.ChunkSize);
+        return GetLocalMapChunks(uid, grid, localAABB);
     }
 
     internal ChunkEnumerator GetMapChunks(EntityUid uid, MapGridComponent grid, Box2Rotated worldArea)
     {
         var matrix = _transform.GetInvWorldMatrix(uid);
         var localArea = matrix.TransformBox(worldArea);
-        return new ChunkEnumerator(grid.Chunks, localArea, grid.ChunkSize);
+        return GetLocalMapChunks(uid, grid, localArea);
     }
 
     internal ChunkEnumerator GetLocalMapChunks(EntityUid uid, MapGridComponent grid, Box2 localAABB)
     {
-        return new ChunkEnumerator(grid.Chunks, localAABB, grid.ChunkSize);
+        Box2 compAABB;
+
+        // The entire area intersects.
+        if (_mapQuery.HasComponent(uid))
+        {
+            compAABB = localAABB;
+        }
+        else
+        {
+            compAABB = grid.LocalAABB.Intersect(localAABB);
+        }
+
+        if (compAABB.IsEmpty())
+            return ChunkEnumerator.Empty;
+
+        return new ChunkEnumerator(grid.Chunks, compAABB, grid.ChunkSize);
     }
 
     #endregion ChunkAccess
@@ -1229,7 +1293,7 @@ public abstract partial class SharedMapSystem
                 $"Grid {uid} is on map {mapId}, but coords are on map {posWorld.MapId}.",
                 nameof(posWorld));
 
-        if (!TryComp<MapGridComponent>(uid, out var grid))
+        if (!_gridQuery.TryGetComponent(uid, out var grid))
         {
             return new EntityCoordinates(MapManager.GetMapEntityId(posWorld.MapId), new Vector2(posWorld.X, posWorld.Y));
         }
@@ -1323,8 +1387,36 @@ public abstract partial class SharedMapSystem
 
     public EntityCoordinates GridTileToLocal(EntityUid uid, MapGridComponent grid, Vector2i gridTile)
     {
-        return new(uid,
-            new Vector2(gridTile.X * grid.TileSize + (grid.TileSize / 2f), gridTile.Y * grid.TileSize + (grid.TileSize / 2f)));
+        var position = TileCenterToVector(uid, grid, gridTile);
+
+        return new(uid, position);
+    }
+
+    /// <summary>
+    /// Turns a gridtile origin into a Vector2, accounting for tile size.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Vector2 TileToVector(Entity<MapGridComponent> grid, Vector2i gridTile)
+    {
+        return new Vector2(gridTile.X * grid.Comp.TileSize, gridTile.Y * grid.Comp.TileSize);
+    }
+
+    /// <summary>
+    /// Turns a gridtile center into a Vector2, accounting for tile size.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Vector2 TileCenterToVector(EntityUid uid, MapGridComponent grid, Vector2i gridTile)
+    {
+        return TileCenterToVector((uid, grid), gridTile);
+    }
+
+    /// <summary>
+    /// Turns a gridtile center into a Vector2, accounting for tile size.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Vector2 TileCenterToVector(Entity<MapGridComponent> grid, Vector2i gridTile)
+    {
+        return new Vector2(gridTile.X * grid.Comp.TileSize, gridTile.Y * grid.Comp.TileSize) + grid.Comp.TileSizeHalfVector;
     }
 
     public Vector2 GridTileToWorldPos(EntityUid uid, MapGridComponent grid, Vector2i gridTile)
