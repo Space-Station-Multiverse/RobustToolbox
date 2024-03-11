@@ -56,6 +56,9 @@ END TEMPLATE-->
 
 ## 0.0.6
 
+
+## 0.0.6
+
 * Updated to upstream 213.0.0 (includes the security fix for ImageSharp)
 
 ## 0.0.5
