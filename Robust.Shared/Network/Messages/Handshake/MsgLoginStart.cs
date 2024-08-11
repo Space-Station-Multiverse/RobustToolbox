@@ -15,29 +15,34 @@ namespace Robust.Shared.Network.Messages.Handshake
 
         public override MsgGroups MsgGroup => MsgGroups.Core;
 
-        public string UserName;
+        /// <summary>
+        /// This is the username the player prefers -- however, the server may end up assigning a
+        /// derivative based on it.
+        /// </summary>
+        public string PreferredUserName;
+
         public ImmutableArray<byte> HWId;
         public bool CanAuth;
-        public bool NeedPubKey;
+        public bool NeedServerPublicKey;
         public bool Encrypt;
 
         public override void ReadFromBuffer(NetIncomingMessage buffer, IRobustSerializer serializer)
         {
-            UserName = buffer.ReadString();
+            PreferredUserName = buffer.ReadString();
             var length = buffer.ReadByte();
             HWId = ImmutableArray.Create(buffer.ReadBytes(length));
             CanAuth = buffer.ReadBoolean();
-            NeedPubKey = buffer.ReadBoolean();
+            NeedServerPublicKey = buffer.ReadBoolean();
             Encrypt = buffer.ReadBoolean();
         }
 
         public override void WriteToBuffer(NetOutgoingMessage buffer, IRobustSerializer serializer)
         {
-            buffer.Write(UserName);
+            buffer.Write(PreferredUserName);
             buffer.Write((byte) HWId.Length);
             buffer.Write(HWId.AsSpan());
             buffer.Write(CanAuth);
-            buffer.Write(NeedPubKey);
+            buffer.Write(NeedServerPublicKey);
             buffer.Write(Encrypt);
         }
     }

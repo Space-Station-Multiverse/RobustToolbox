@@ -5,6 +5,7 @@
     <PackageVersion Include="ILReader.Core" Version="1.0.0.4" />
     <PackageVersion Include="JetBrains.Annotations" Version="2023.3.0" />
     <PackageVersion Include="JetBrains.Profiler.Api" Version="1.4.0" />
+    <PackageVersion Include="JWT" Version="10.1.1" />
     <PackageVersion Include="Linguini.Bundle" Version="0.1.3" />
     <PackageVersion Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.4" />
     <PackageVersion Include="Microsoft.CodeAnalysis.Analyzer.Testing" Version="1.1.1"/>
