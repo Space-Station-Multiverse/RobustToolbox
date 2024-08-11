@@ -124,20 +124,19 @@ namespace Robust.Shared.Network
             CancellationToken cancel)
         {
             var encrypt = _config.GetCVar(CVars.NetEncrypt);
-            var authToken = _authManager.Token;
-            var pubKey = _authManager.PubKey;
-            var authServer = _authManager.Server;
-            var userId = _authManager.UserId;
+            var serverPublicKey = _authManager.ServerPublicKey;
+            var userPublicKey = _authManager.UserPublicKey;
+            var userJWT = _authManager.UserJWT;
 
-            var hasPubKey = !string.IsNullOrEmpty(pubKey);
-            var authenticate = !string.IsNullOrEmpty(authToken);
+            var hasServerPublicKey = !string.IsNullOrEmpty(serverPublicKey);
+            var authenticate = !string.IsNullOrEmpty(userPublicKey) && !string.IsNullOrEmpty(userJWT);
 
             var hwId = ImmutableArray.Create(HWId.Calc());
             var msgLogin = new MsgLoginStart
             {
-                UserName = userNameRequest,
+                PreferredUserName = userNameRequest,
                 CanAuth = authenticate,
-                NeedPubKey = !hasPubKey,
+                NeedServerPublicKey = !hasServerPublicKey,
                 HWId = hwId,
                 Encrypt = encrypt
             };
@@ -163,10 +162,10 @@ namespace Robust.Shared.Network
                     encryption = new NetEncryption(sharedSecret, isServer: false);
 
                 byte[] keyBytes;
-                if (hasPubKey)
+                if (hasServerPublicKey)
                 {
                     // public key provided by launcher.
-                    keyBytes = Convert.FromBase64String(pubKey!);
+                    keyBytes = Convert.FromBase64String(serverPublicKey!);
                 }
                 else
                 {
@@ -188,21 +187,22 @@ namespace Robust.Shared.Network
 
                 var sealedData = CryptoBox.Seal(data, keyBytes);
 
-                var authHashBytes = MakeAuthHash(sharedSecret, keyBytes);
-                var authHash = Convert.ToBase64String(authHashBytes);
+                // var authHashBytes = MakeAuthHash(sharedSecret, keyBytes);
+                // var authHash = Convert.ToBase64String(authHashBytes);
 
-                var joinReq = new JoinRequest(authHash);
-                var request = new HttpRequestMessage(HttpMethod.Post, authServer + "api/session/join");
-                request.Content = JsonContent.Create(joinReq);
-                request.Headers.Authorization = new AuthenticationHeaderValue("SS14Auth", authToken);
-                var joinResp = await _http.Client.SendAsync(request, cancel);
+                // var joinReq = new JoinRequest(authHash);
+                // var request = new HttpRequestMessage(HttpMethod.Post, authServer + "api/session/join");
+                // request.Content = JsonContent.Create(joinReq);
+                // request.Headers.Authorization = new AuthenticationHeaderValue("SS14Auth", authToken);
+                // var joinResp = await _http.Client.SendAsync(request, cancel);
 
-                joinResp.EnsureSuccessStatusCode();
+                // joinResp.EnsureSuccessStatusCode();
 
                 var encryptionResponse = new MsgEncryptionResponse
                 {
                     SealedData = sealedData,
-                    UserId = userId!.Value.UserId
+                    UserJWT = _authManager.UserJWT,
+                    UserPublicKey = _authManager.UserPublicKey
                 };
 
                 var outEncRespMsg = peer.Peer.CreateMessage();
