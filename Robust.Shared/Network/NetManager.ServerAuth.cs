@@ -139,7 +139,7 @@ namespace Robust.Shared.Network
                     var userPublicKeyString = msgEncResponse.UserPublicKey ?? "";
                     var userJWTString = msgEncResponse.UserJWT ?? "";
 
-                    var userPublicKey = RSA.Create();
+                    var userPublicKey = ECDsa.Create();
                     userPublicKey.ImportFromPem(userPublicKeyString);
 
                     try
@@ -148,7 +148,7 @@ namespace Robust.Shared.Network
                         IDateTimeProvider provider = new UtcDateTimeProvider();
                         IJwtValidator validator = new JwtValidator(serializer, provider);
                         IBase64UrlEncoder urlEncoder = new JwtBase64UrlEncoder();
-                        IJwtAlgorithm algorithm = new RS2048Algorithm(userPublicKey);
+                        IJwtAlgorithm algorithm = new ES256Algorithm(userPublicKey);
                         IJwtDecoder decoder = new JwtDecoder(serializer, validator, urlEncoder, algorithm);
 
                         var jwtJson = decoder.Decode(userJWTString);

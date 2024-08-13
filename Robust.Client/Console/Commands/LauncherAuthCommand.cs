@@ -55,15 +55,15 @@ namespace Robust.Client.Console.Commands
             var publicKeyString = reader.GetString(1);
             var privateKeyString = reader.GetString(2);
 
-            var publicKey = RSA.Create();
+            var publicKey = ECDsa.Create();
             publicKey.ImportFromPem(publicKeyString);
 
-            var privateKey = RSA.Create();
+            var privateKey = ECDsa.Create();
             privateKey.ImportFromPem(privateKeyString);
 
             // Create JWT
             var token = JwtBuilder.Create()
-                      .WithAlgorithm(new RS2048Algorithm(publicKey, privateKey))
+                      .WithAlgorithm(new ES256Algorithm(publicKey, privateKey))
                       .AddClaim("exp", DateTimeOffset.UtcNow.AddMinutes(5).ToUnixTimeSeconds()) // expiry
                       .AddClaim("nbf", DateTimeOffset.UtcNow.AddMinutes(-5).ToUnixTimeSeconds()) // not before
                       .AddClaim("iat", DateTimeOffset.UtcNow) // issued at
