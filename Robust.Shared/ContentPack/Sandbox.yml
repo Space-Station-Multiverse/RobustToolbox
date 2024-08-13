@@ -442,7 +442,15 @@ Types:
     AddressFamily: { }
   System.Numerics:
     BitOperations: { All: True }
+    Complex: { All: True }
+    Matrix3x2: { All: True }
+    Matrix4x4: { All: True }
+    Plane: { All: True }
+    Quaternion: { All: True }
     Vector2: { All: True }
+    Vector3: { All: True }
+    Vector4: { All: True }
+    Matrix3x2: { All: True }
   System.Reflection:
     Assembly:
       Methods:
@@ -770,7 +778,7 @@ Types:
     Array:
       Methods:
       - "!!0 Find<>(!!0[], System.Predicate`1<!!0>)"
-      - "!!0 Resize<>(!!0[], int)"
+      - "void Resize<>(ref !!0[], int)"
       - "!!1 ConvertAll<,>(!!0[], System.Converter`2<!!0, !!1>)"
       - "!!0[] Empty<>()"
       - "!!0[] FindAll<>(!!0[], System.Predicate`1<!!0>)"
@@ -824,6 +832,7 @@ Types:
       - "object GetValue(long[])"
       - "System.Collections.IEnumerator GetEnumerator()"
       - "System.Collections.ObjectModel.ReadOnlyCollection`1<!!0> AsReadOnly<>(!!0[])"
+      - "void Clear(System.Array)"
       - "void Clear(System.Array, int, int)"
       - "void ConstrainedCopy(System.Array, int, System.Array, int, int)"
       - "void Copy(System.Array, int, System.Array, int, int)"
