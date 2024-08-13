@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -12,6 +13,7 @@ using JWT.Exceptions;
 using JWT.Serializers;
 using Lidgren.Network;
 using Robust.Shared.AuthLib;
+using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Network.Messages.Handshake;
 using Robust.Shared.Utility;
@@ -181,6 +183,34 @@ namespace Robust.Shared.Network
 
                     // TODO - Find user based on public key
 
+                    // Get public key in byte format.  This should be a bit more efficient than
+                    // doing lookups based on base64() keys, and by using the parsed ES256 object
+                    // it should prevent any issues about slightly differing PEM syntax, etc. resulting
+                    // in multiple versions of the same key.
+                    var userPublicKeyX509Der = userPublicKey.ExportSubjectPublicKeyInfo();
+                    var userPublicKeyImmutableBytes = userPublicKeyX509Der.ToImmutableArray();
+
+                    var serverUserDataAssociation = IoCManager.Resolve<IServerUserDataAssociation>();
+                    var associationResult = await serverUserDataAssociation.AttemptUserDataFromPublicKey(
+                        userPublicKeyImmutableBytes, msgLogin.HWId, msgLogin.PreferredUserName);
+
+                    if (associationResult.success && associationResult.userData != null)
+                    {
+                        _logger.Verbose(
+                         $"{connection.RemoteEndPoint}: Content successfully found/created user data in AttemptUserDataFromPublicKey.");
+
+                         userData = associationResult.userData;
+                    }
+                    else
+                    {
+                        _logger.Verbose(
+                         $"{connection.RemoteEndPoint}: Disconnecting due to Content AttemptUserDataFromPublicKey failing ({associationResult.errorMessage})");
+
+                        connection.Disconnect($"There was a problem logging you in.  {associationResult.errorMessage}");
+                        return;
+                    }
+
+
                     // _logger.Verbose(
                     //     $"{connection.RemoteEndPoint}: Checking with session server for auth hash...");
 
@@ -208,13 +238,12 @@ namespace Robust.Shared.Network
                     // userData = new NetUserData(userId, joinedRespJson.UserData.UserName)
                     // {
                     //     PatronTier = joinedRespJson.UserData.PatronTier,
-                    //     HWId = msgLogin.HWId
+                    //     HWId = msgLogin.HWId,
+                    //      PublicKey = userPublicKeyX509Der
                     // };
-                    // padSuccessMessage = false;
-                    // type = LoginType.LoggedIn;
 
-                    connection.Disconnect("rawr");
-                    return;
+                    padSuccessMessage = false;
+                    type = LoginType.LoggedIn;
                 }
                 else
                 {

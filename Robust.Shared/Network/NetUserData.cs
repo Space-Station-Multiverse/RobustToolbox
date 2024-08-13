@@ -16,6 +16,7 @@ namespace Robust.Shared.Network
         public string? PatronTier { get; init; }
         [ViewVariables]
         public ImmutableArray<byte> HWId { get; init; }
+        public ImmutableArray<byte> PublicKey { get; init; }
 
         public NetUserData(NetUserId userId, string userName)
         {
