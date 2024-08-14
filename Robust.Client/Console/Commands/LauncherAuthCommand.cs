@@ -33,7 +33,7 @@ namespace Robust.Client.Console.Commands
             using var con = new SqliteConnection($"Data Source={dbPath};Mode=ReadOnly");
             con.Open();
             using var cmd = con.CreateCommand();
-            cmd.CommandText = "SELECT UserName, PublicKey, PrivateKey FROM LoginMV";
+            cmd.CommandText = "SELECT UserName, PublicKey, PrivateKey FROM LoginMVKey";
 
             if (wantName != null)
             {
@@ -67,7 +67,6 @@ namespace Robust.Client.Console.Commands
                       .AddClaim("exp", DateTimeOffset.UtcNow.AddMinutes(5).ToUnixTimeSeconds()) // expiry
                       .AddClaim("nbf", DateTimeOffset.UtcNow.AddMinutes(-5).ToUnixTimeSeconds()) // not before
                       .AddClaim("iat", DateTimeOffset.UtcNow) // issued at
-                      .AddClaim("jti", "TODO") // TODO
                       .AddClaim("aud", "TODO") // TODO
                       .AddClaim("preferredUserName", userName)
                       .Encode();
