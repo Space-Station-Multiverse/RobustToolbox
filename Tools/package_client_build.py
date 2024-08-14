@@ -152,7 +152,9 @@ def build_windows(skip_build: bool) -> None:
 
     client_zip = zipfile.ZipFile(
         p("release", "Robust.Client_win-x64.zip"), "w",
-        compression=zipfile.ZIP_DEFLATED)
+        compression=zipfile.ZIP_DEFLATED,
+        strict_timestamps=False # Was hitting this issue locally when building where dotnet is making files from 1979 for some reason -- Skye
+        )
 
     copy_dir_into_zip(p("bin", "Client", "win-x64", "publish"), "", client_zip, IGNORED_FILES_WINDOWS)
     copy_resources("Resources", client_zip)
@@ -168,7 +170,9 @@ def build_macos(skip_build: bool) -> None:
     print(Fore.GREEN + "Packaging macOS x64 client..." + Style.RESET_ALL)
     # Client has to go in an app bundle.
     client_zip = zipfile.ZipFile(p("release", "Robust.Client_osx-x64.zip"), "a",
-                                 compression=zipfile.ZIP_DEFLATED)
+                                 compression=zipfile.ZIP_DEFLATED,
+                                 strict_timestamps=False # Was hitting this issue locally when building where dotnet is making files from 1979 for some reason -- Skye
+                                 )
 
     contents = p("Space Station 14.app", "Contents", "Resources")
     copy_dir_into_zip(p("BuildFiles", "Mac", "Space Station 14.app"), "Space Station 14.app", client_zip)
@@ -188,7 +192,9 @@ def build_linux(skip_build: bool) -> None:
 
     client_zip = zipfile.ZipFile(
         p("release", "Robust.Client_linux-x64.zip"), "w",
-        compression=zipfile.ZIP_DEFLATED)
+        compression=zipfile.ZIP_DEFLATED,
+        strict_timestamps=False # Was hitting this issue locally when building where dotnet is making files from 1979 for some reason -- Skye
+        )
 
     copy_dir_into_zip(p("bin", "Client", "linux-x64", "publish"), "", client_zip, IGNORED_FILES_LINUX)
     copy_resources("Resources", client_zip)
