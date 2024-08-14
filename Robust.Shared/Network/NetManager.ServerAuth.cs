@@ -5,6 +5,7 @@ using System.Net;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Security.Cryptography;
+using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 using JWT;
 using JWT.Algorithms;
@@ -144,6 +145,8 @@ namespace Robust.Shared.Network
                     var userPublicKey = ECDsa.Create();
                     userPublicKey.ImportFromPem(userPublicKeyString);
 
+                    string jwtJsonString = "";
+
                     try
                     {
                         IJsonSerializer serializer = new JsonNetSerializer();
@@ -153,8 +156,7 @@ namespace Robust.Shared.Network
                         IJwtAlgorithm algorithm = new ES256Algorithm(userPublicKey);
                         IJwtDecoder decoder = new JwtDecoder(serializer, validator, urlEncoder, algorithm);
 
-                        var jwtJson = decoder.Decode(userJWTString);
-
+                        jwtJsonString = decoder.Decode(userJWTString);
                     }
                     catch (TokenNotYetValidException)
                     {
@@ -178,10 +180,41 @@ namespace Robust.Shared.Network
                         return;
                     }
 
+                    if (String.IsNullOrEmpty(jwtJsonString))
+                    {
+                        connection.Disconnect("JWT Validation Error - No JSON in JWT.");
+                        return;
+                    }
+
+                    // Verify JWT is actually for this server
+                    JsonNode? jsonNode = JsonNode.Parse(jwtJsonString);
+
+                    if (jsonNode == null)
+                    {
+                        connection.Disconnect("JWT Validation Error - Bad/Missing JSON in JWT.");
+                        return;
+                    }
+
+                    var audienceClaimNode = jsonNode["aud"];
+                    if (audienceClaimNode == null)
+                    {
+                        connection.Disconnect("JWT Validation Error - No audience claim in JWT.");
+                        return;
+                    }
+
+                    string signedForServerInJWT = audienceClaimNode.GetValue<string>();
+                    string serverSignatureBase64 = Convert.ToBase64String(CryptoPublicKey);
+                    if (signedForServerInJWT != serverSignatureBase64)
+                    {
+                        // It could just be that the server recently restarted and launcher has old key.
+                        connection.Disconnect("JWT Validation Error\nJWT appears to be for another server.\nTry returning to launcher and reconnect.");
+                        return;
+                    }
+
                     _logger.Verbose(
                         $"{connection.RemoteEndPoint}: JWT appears valid");
 
-                    // TODO - Find user based on public key
+                    // Find user based on public key
 
                     // Get public key in byte format.  This should be a bit more efficient than
                     // doing lookups based on base64() keys, and by using the parsed ES256 object
