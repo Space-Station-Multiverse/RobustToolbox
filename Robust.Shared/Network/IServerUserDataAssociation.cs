@@ -1,4 +1,5 @@
 using System.Collections.Immutable;
+using System.Net;
 using System.Threading.Tasks;
 
 namespace Robust.Shared.Network;
@@ -12,7 +13,8 @@ namespace Robust.Shared.Network;
 /// </summary>
 public interface IServerUserDataAssociation
 {
-    public Task<AssociationResult> AttemptUserDataFromPublicKey(ImmutableArray<byte> publicKey, ImmutableArray<byte> hWId, string requestedUserName);
+    public Task<AssociationResult> AttemptUserDataFromPublicKey(ImmutableArray<byte> publicKey,
+        ImmutableArray<byte> hWId, string requestedUserName, IPAddress connectingAddress);
 
     public struct AssociationResult
     {
