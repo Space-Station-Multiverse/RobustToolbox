@@ -195,20 +195,30 @@ namespace Robust.Shared.Network
                         return;
                     }
 
-                    var audienceClaimNode = jsonNode["aud"];
-                    if (audienceClaimNode == null)
-                    {
-                        connection.Disconnect("JWT Validation Error - No audience claim in JWT.");
-                        return;
-                    }
+                    bool verifyAudienceClaim = true;
 
-                    string signedForServerInJWT = audienceClaimNode.GetValue<string>();
-                    string serverSignatureBase64 = Convert.ToBase64String(CryptoPublicKey);
-                    if (signedForServerInJWT != serverSignatureBase64)
+                    #if TOOLS
+                    // Dev builds can skip this for ease of testing purposes.
+                    verifyAudienceClaim = _config.GetCVar<bool>(CVars.AuthRequireAudienceClaim);
+                    #endif
+
+                    if (verifyAudienceClaim)
                     {
-                        // It could just be that the server recently restarted and launcher has old key.
-                        connection.Disconnect("JWT Validation Error\nJWT appears to be for another server.\nTry returning to launcher and reconnect.");
-                        return;
+                        var audienceClaimNode = jsonNode["aud"];
+                        if (audienceClaimNode == null)
+                        {
+                            connection.Disconnect("JWT Validation Error - No audience claim in JWT.");
+                            return;
+                        }
+
+                        string signedForServerInJWT = audienceClaimNode.GetValue<string>();
+                        string serverSignatureBase64 = Convert.ToBase64String(CryptoPublicKey);
+                        if (signedForServerInJWT != serverSignatureBase64)
+                        {
+                            // It could just be that the server recently restarted and launcher has old key.
+                            connection.Disconnect("JWT Validation Error\nJWT appears to be for another server.\nTry returning to launcher and reconnect.");
+                            return;
+                        }
                     }
 
                     _logger.Verbose(
