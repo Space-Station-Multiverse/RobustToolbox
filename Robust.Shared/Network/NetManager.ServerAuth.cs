@@ -235,7 +235,7 @@ namespace Robust.Shared.Network
 
                     var serverUserDataAssociation = IoCManager.Resolve<IServerUserDataAssociation>();
                     var associationResult = await serverUserDataAssociation.AttemptUserDataFromPublicKey(
-                        userPublicKeyImmutableBytes, msgLogin.HWId, msgLogin.PreferredUserName);
+                        userPublicKeyImmutableBytes, msgLogin.HWId, msgLogin.PreferredUserName, ip);
 
                     if (associationResult.success && associationResult.userData != null)
                     {
