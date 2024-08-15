@@ -875,6 +875,13 @@ namespace Robust.Shared
         public static readonly CVarDef<bool> AuthAllowLocal =
             CVarDef.Create("auth.allowlocal", true, CVar.SERVERONLY);
 
+        /// <summary>
+        /// Do not turn off during normal production use.  This skips the audience claim verification, so any JWT auth
+        /// token can be used by any server.  For testing purposes only -- will not work unless a tools/debug build.
+        /// </summary> <summary>
+        public static readonly CVarDef<bool> AuthRequireAudienceClaim =
+            CVarDef.Create("auth.require_audience_claim", true, CVar.SERVERONLY);
+
         /*
          * RENDERING
          */
