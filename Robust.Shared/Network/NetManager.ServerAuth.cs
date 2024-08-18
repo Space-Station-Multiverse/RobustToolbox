@@ -294,7 +294,8 @@ namespace Robust.Shared.Network
 
                     userData = new NetUserData(userId, name)
                     {
-                        HWId = msgLogin.HWId
+                        HWId = msgLogin.HWId,
+                        PublicKey = ImmutableArray<byte>.Empty
                     };
                 }
 
