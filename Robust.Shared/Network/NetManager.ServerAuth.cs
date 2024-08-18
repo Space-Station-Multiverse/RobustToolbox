@@ -253,38 +253,6 @@ namespace Robust.Shared.Network
                         return;
                     }
 
-
-                    // _logger.Verbose(
-                    //     $"{connection.RemoteEndPoint}: Checking with session server for auth hash...");
-
-                    // var authHashBytes = MakeAuthHash(sharedSecret, CryptoPublicKey!);
-                    // var authHash = Base64Helpers.ConvertToBase64Url(authHashBytes);
-
-                    // var url = $"{authServer}api/session/hasJoined?hash={authHash}&userId={msgEncResponse.UserId}";
-                    // var joinedRespJson = await _http.Client.GetFromJsonAsync<HasJoinedResponse>(url);
-
-                    // if (joinedRespJson is not {IsValid: true})
-                    // {
-                    //     connection.Disconnect("Failed to validate login");
-                    //     return;
-                    // }
-
-                    // _logger.Verbose(
-                    //     $"{connection.RemoteEndPoint}: Auth hash passed. " +
-                    //     $"User ID: {joinedRespJson.UserData!.UserId}, " +
-                    //     $"Username: {joinedRespJson.UserData!.UserName}," +
-                    //     $"Patron: {joinedRespJson.UserData.PatronTier}");
-
-                    // TODO ASSIGNMENT::::
-
-                    // var userId = new NetUserId(joinedRespJson.UserData!.UserId);
-                    // userData = new NetUserData(userId, joinedRespJson.UserData.UserName)
-                    // {
-                    //     PatronTier = joinedRespJson.UserData.PatronTier,
-                    //     HWId = msgLogin.HWId,
-                    //      PublicKey = userPublicKeyX509Der
-                    // };
-
                     padSuccessMessage = false;
                     type = LoginType.LoggedIn;
                 }
