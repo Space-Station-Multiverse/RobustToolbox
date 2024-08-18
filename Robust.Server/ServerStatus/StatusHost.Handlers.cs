@@ -39,14 +39,34 @@ namespace Robust.Server.ServerStatus
                 return false;
             }
 
+            var buildInfo = GameBuildInformation.GetBuildInfoFromConfig(_cfg);
+
             var jObject = new JsonObject
             {
                 // We need to send at LEAST name and player count to have the launcher work with us.
                 // Tags is optional technically but will be necessary practically for future organization.
                 // Content can override these if it wants (e.g. stealthmins).
                 ["name"] = _serverNameCache,
-                ["players"] = _playerManager.PlayerCount
+                ["players"] = _playerManager.PlayerCount,
+                ["engine"] = buildInfo.EngineVersion // MV Launcher can filter based on engine
             };
+
+            // MV launcher can display auth methods:
+            var authMethods = new JsonArray();
+
+            if (_netManager.Auth == Shared.Network.AuthMode.Optional ||
+                _netManager.Auth == Shared.Network.AuthMode.Required)
+            {
+                authMethods.Add("mvKeyAuth");
+            }
+
+            if (_netManager.Auth == Shared.Network.AuthMode.Optional ||
+                _netManager.Auth == Shared.Network.AuthMode.Disabled)
+            {
+                authMethods.Add("guest");
+            }
+
+            jObject["auth_methods"] = authMethods;
 
             var tagsCache = _serverTagsCache;
             if (tagsCache != null)
