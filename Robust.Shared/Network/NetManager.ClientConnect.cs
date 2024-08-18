@@ -187,17 +187,6 @@ namespace Robust.Shared.Network
 
                 var sealedData = CryptoBox.Seal(data, keyBytes);
 
-                // var authHashBytes = MakeAuthHash(sharedSecret, keyBytes);
-                // var authHash = Convert.ToBase64String(authHashBytes);
-
-                // var joinReq = new JoinRequest(authHash);
-                // var request = new HttpRequestMessage(HttpMethod.Post, authServer + "api/session/join");
-                // request.Content = JsonContent.Create(joinReq);
-                // request.Headers.Authorization = new AuthenticationHeaderValue("SS14Auth", authToken);
-                // var joinResp = await _http.Client.SendAsync(request, cancel);
-
-                // joinResp.EnsureSuccessStatusCode();
-
                 var encryptionResponse = new MsgEncryptionResponse
                 {
                     SealedData = sealedData,
