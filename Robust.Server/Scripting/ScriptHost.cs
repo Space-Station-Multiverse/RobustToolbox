@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
@@ -137,6 +138,22 @@ namespace Robust.Server.Scripting
 
             var replyMessage = new MsgScriptResponse();
             replyMessage.ScriptSession = message.ScriptSession;
+
+            // Safety check.  There's no reason most production servers should allow remote code execution IMO,
+            // especially since it is not sandboxed.  If you really need it, enable the environment variable.
+            if (Environment.GetEnvironmentVariable("ALLOW_RCE_VIA_SCSI") != "YES")
+            {
+                string deniedMessage = "SCSI is disabled by default in MV.  Set ALLOW_RCE_VIA_SCSI=YES environment variable to use it.  Be aware this allows remote code execution on your server.";
+                _sawmill.Warning(deniedMessage, session);
+
+                replyMessage.Echo = new FormattedMessage();
+                replyMessage.Response = new FormattedMessage();
+                replyMessage.Response.AddText(deniedMessage);
+                replyMessage.WasComplete = true;
+                _netManager.ServerSendMessage(replyMessage, message.MsgChannel);
+
+                return;
+            }
 
             var code = message.Code;
 
