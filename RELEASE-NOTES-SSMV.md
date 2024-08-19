@@ -54,6 +54,22 @@ END TEMPLATE-->
 *None yet*
 
 
+## 1.0.1
+
+
+## 1.0.0
+
+### Breaking changes
+
+* MV Key Auth replaces WizDen auth.
+
+### New features
+
+* MV Key Auth.
+* VPN Block.
+* SCSI disabled unless environment variable set.
+
+
 ## 0.0.6
 
 

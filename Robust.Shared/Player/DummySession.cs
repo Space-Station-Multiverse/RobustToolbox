@@ -44,7 +44,8 @@ internal sealed class DummySession : ICommonSessionInternal
         Data = data;
         UserData = new(userId, userName)
         {
-            HWId = ImmutableArray<byte>.Empty
+            HWId = ImmutableArray<byte>.Empty,
+            PublicKey = ImmutableArray<byte>.Empty
         };
         DummyChannel = new(this);
     }

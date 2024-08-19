@@ -1,6 +1,9 @@
 ﻿#if TOOLS
 using System;
 using System.IO;
+using System.Security.Cryptography;
+using JWT.Algorithms;
+using JWT.Builder;
 using Microsoft.Data.Sqlite;
 using Robust.Client.Utility;
 using Robust.Shared.Console;
@@ -21,7 +24,8 @@ namespace Robust.Client.Console.Commands
             var wantName = args.Length > 0 ? args[0] : null;
 
             var basePath = Path.GetDirectoryName(UserDataDir.GetUserDataDir(_gameController))!;
-            var dbPath = Path.Combine(basePath, "launcher", "settings.db");
+            //var dbPath = Path.Combine(basePath, "launcher-ssmv", "settings.db");
+            var dbPath = Path.Combine(basePath, "Test61", "settings.db"); // TEMP
 
 #if USE_SYSTEM_SQLITE
             SQLitePCL.raw.SetProvider(new SQLitePCL.SQLite3Provider_sqlite3());
@@ -29,11 +33,11 @@ namespace Robust.Client.Console.Commands
             using var con = new SqliteConnection($"Data Source={dbPath};Mode=ReadOnly");
             con.Open();
             using var cmd = con.CreateCommand();
-            cmd.CommandText = "SELECT UserId, UserName, Token FROM Login WHERE Expires > datetime('NOW')";
+            cmd.CommandText = "SELECT UserName, PublicKey, PrivateKey FROM LoginMVKey";
 
             if (wantName != null)
             {
-                cmd.CommandText += " AND UserName = @userName";
+                cmd.CommandText += " WHERE UserName = @userName";
                 cmd.Parameters.AddWithValue("@userName", wantName);
             }
 
@@ -47,14 +51,30 @@ namespace Robust.Client.Console.Commands
                 return;
             }
 
-            var userId = Guid.Parse(reader.GetString(0));
-            var userName = reader.GetString(1);
-            var token = reader.GetString(2);
+            var userName = reader.GetString(0);
+            var publicKeyString = reader.GetString(1);
+            var privateKeyString = reader.GetString(2);
 
-            _auth.Token = token;
-            _auth.UserId = new NetUserId(userId);
+            var publicKey = ECDsa.Create();
+            publicKey.ImportFromPem(publicKeyString);
 
-            shell.WriteLine($"Logged into account {userName}");
+            var privateKey = ECDsa.Create();
+            privateKey.ImportFromPem(privateKeyString);
+
+            // Create JWT
+            var token = JwtBuilder.Create()
+                      .WithAlgorithm(new ES256Algorithm(publicKey, privateKey))
+                      .AddClaim("exp", DateTimeOffset.UtcNow.AddMinutes(5).ToUnixTimeSeconds()) // expiry
+                      .AddClaim("nbf", DateTimeOffset.UtcNow.AddMinutes(-5).ToUnixTimeSeconds()) // not before
+                      .AddClaim("iat", DateTimeOffset.UtcNow) // issued at
+                      .AddClaim("aud", "TODO") // TODO
+                      .AddClaim("preferredUserName", userName)
+                      .Encode();
+
+            _auth.UserJWT = token;
+            _auth.UserPublicKey = publicKeyString;
+
+            shell.WriteLine($"Set auth parameters based on launcher keys for {userName}");
         }
     }
 }

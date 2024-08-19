@@ -10,43 +10,34 @@ namespace Robust.Shared.Network
     /// </summary>
     internal interface IAuthManager
     {
-        NetUserId? UserId { get; set; }
-        string? Server { get; set; }
-        string? Token { get; set; }
-        string? PubKey { get; set; }
+        string? ServerPublicKey { get; set; }
+        string? UserPublicKey { get; set; }
+        string? UserJWT { get; set; }
 
         void LoadFromEnv();
     }
 
     internal sealed class AuthManager : IAuthManager
     {
-        public const string DefaultAuthServer = "https://auth.spacestation14.com/";
-
-        public NetUserId? UserId { get; set; }
-        public string? Server { get; set; } = DefaultAuthServer;
-        public string? Token { get; set; }
-        public string? PubKey { get; set; }
+        public string? ServerPublicKey { get; set; }
+        public string? UserPublicKey { get; set; }
+        public string? UserJWT { get; set; }
 
         public void LoadFromEnv()
         {
-            if (TryGetVar("ROBUST_AUTH_SERVER", out var server))
+            if (TryGetVar("ROBUST_AUTH_PUBKEY", out var pubKey)) // Server's public key
             {
-                Server = server;
+                ServerPublicKey = pubKey;
             }
 
-            if (TryGetVar("ROBUST_AUTH_USERID", out var userId))
+            if (TryGetVar("ROBUST_USER_PUBLIC_KEY", out var userPublicKey)) // User's public key
             {
-                UserId = new NetUserId(Guid.Parse(userId));
+                UserPublicKey = userPublicKey;
             }
 
-            if (TryGetVar("ROBUST_AUTH_PUBKEY", out var pubKey))
+            if (TryGetVar("ROBUST_USER_JWT", out var userJWT))
             {
-                PubKey = pubKey;
-            }
-
-            if (TryGetVar("ROBUST_AUTH_TOKEN", out var token))
-            {
-                Token = token;
+                UserJWT = userJWT;
             }
 
             static bool TryGetVar(string var, [NotNullWhen(true)] out string? val)

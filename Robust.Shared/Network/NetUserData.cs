@@ -19,6 +19,7 @@ namespace Robust.Shared.Network
         public string? PatronTier { get; init; }
 
         public ImmutableArray<byte> HWId { get; init; }
+        public ImmutableArray<byte> PublicKey { get; init; }
 
         public NetUserData(NetUserId userId, string userName)
         {
@@ -31,7 +32,7 @@ namespace Robust.Shared.Network
             var stringBuilder = new StringBuilder();
             stringBuilder.Append("NetUserData"); // type name
             stringBuilder.Append(" { ");
-            if ((this with { HWId = default }).PrintMembers(stringBuilder))
+            if ((this with { HWId = default, PublicKey = default }).PrintMembers(stringBuilder))
             {
                 stringBuilder.Append(' ');
             }

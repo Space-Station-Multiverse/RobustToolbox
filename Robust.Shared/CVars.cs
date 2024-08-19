@@ -613,8 +613,9 @@ namespace Robust.Shared
         /// Engine version that launcher needs to connect to this server.
         /// </summary>
         public static readonly CVarDef<string> BuildEngineVersion =
-            CVarDef.Create("build.engine_version",
-                typeof(CVars).Assembly.GetName().Version?.ToString(3) ?? String.Empty);
+            CVarDef.Create("build.engine_version", "");
+        // Can be auto-filled by build.json.  Upstream defaults to the version string, but MV wants to be able to have
+        // build tags like mv-branchname-1.0.0
 
         /// <summary>
         /// Fork ID, as a hint to the launcher to manage local files.
@@ -875,12 +876,12 @@ namespace Robust.Shared
         public static readonly CVarDef<bool> AuthAllowLocal =
             CVarDef.Create("auth.allowlocal", true, CVar.SERVERONLY);
 
-        // Only respected on server, client goes through IAuthManager for security.
         /// <summary>
-        /// Authentication server address.
-        /// </summary>
-        public static readonly CVarDef<string> AuthServer =
-            CVarDef.Create("auth.server", AuthManager.DefaultAuthServer, CVar.SERVERONLY);
+        /// Do not turn off during normal production use.  This skips the audience claim verification, so any JWT auth
+        /// token can be used by any server.  For testing purposes only -- will not work unless a tools/debug build.
+        /// </summary> <summary>
+        public static readonly CVarDef<bool> AuthRequireAudienceClaim =
+            CVarDef.Create("auth.require_audience_claim", true, CVar.SERVERONLY);
 
         /*
          * RENDERING

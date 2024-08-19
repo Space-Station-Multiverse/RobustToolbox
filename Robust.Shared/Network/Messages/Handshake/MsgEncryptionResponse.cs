@@ -12,21 +12,26 @@ namespace Robust.Shared.Network.Messages.Handshake
 
         public override MsgGroups MsgGroup => MsgGroups.Core;
 
-        public Guid UserId;
         public byte[] SealedData;
+        public string UserJWT;
+        public string UserPublicKey;
 
         public override void ReadFromBuffer(NetIncomingMessage buffer, IRobustSerializer serializer)
         {
-            UserId = buffer.ReadGuid();
             var keyLength = buffer.ReadVariableInt32();
             SealedData = buffer.ReadBytes(keyLength);
+
+            UserJWT = buffer.ReadString();
+            UserPublicKey = buffer.ReadString();
         }
 
         public override void WriteToBuffer(NetOutgoingMessage buffer, IRobustSerializer serializer)
         {
-            buffer.Write(UserId);
             buffer.WriteVariableInt32(SealedData.Length);
             buffer.Write(SealedData);
+
+            buffer.Write(UserJWT);
+            buffer.Write(UserPublicKey);
         }
     }
 }

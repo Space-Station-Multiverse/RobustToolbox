@@ -1,12 +1,20 @@
 ﻿using System;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Security.Cryptography;
+using System.Text.Json.Nodes;
 using System.Threading.Tasks;
+using JWT;
+using JWT.Algorithms;
+using JWT.Builder;
+using JWT.Exceptions;
+using JWT.Serializers;
 using Lidgren.Network;
 using Robust.Shared.AuthLib;
+using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Network.Messages.Handshake;
 using Robust.Shared.Utility;
@@ -48,12 +56,11 @@ namespace Robust.Shared.Network
                 var ip = connection.RemoteEndPoint.Address;
                 var isLocal = IPAddress.IsLoopback(ip) && _config.GetCVar(CVars.AuthAllowLocal);
                 var canAuth = msgLogin.CanAuth;
-                var needPk = msgLogin.NeedPubKey;
-                var authServer = _config.GetCVar(CVars.AuthServer);
+                var needServerPublicKey = msgLogin.NeedServerPublicKey;
 
                 _logger.Verbose(
                     $"{connection.RemoteEndPoint}: Received MsgLoginStart. " +
-                    $"canAuth: {canAuth}, needPk: {needPk}, username: {msgLogin.UserName}, encrypt: {msgLogin.Encrypt}");
+                    $"canAuth: {canAuth}, needServerPublicKey: {needServerPublicKey}, username: {msgLogin.PreferredUserName}, encrypt: {msgLogin.Encrypt}");
 
                 _logger.Verbose(
                     $"{connection.RemoteEndPoint}: Connection is specialized local? {isLocal} ");
@@ -81,7 +88,7 @@ namespace Robust.Shared.Network
                     RandomNumberGenerator.Fill(verifyToken);
                     var msgEncReq = new MsgEncryptionRequest
                     {
-                        PublicKey = needPk ? CryptoPublicKey : Array.Empty<byte>(),
+                        PublicKey = needServerPublicKey ? CryptoPublicKey : Array.Empty<byte>(),
                         VerifyToken = verifyToken
                     };
 
@@ -131,33 +138,121 @@ namespace Robust.Shared.Network
                     if (msgLogin.Encrypt)
                         encryption = new NetEncryption(sharedSecret, isServer: true);
 
-                    _logger.Verbose(
-                        $"{connection.RemoteEndPoint}: Checking with session server for auth hash...");
+                    // Validate the JWT
+                    var userPublicKeyString = msgEncResponse.UserPublicKey ?? "";
+                    var userJWTString = msgEncResponse.UserJWT ?? "";
 
-                    var authHashBytes = MakeAuthHash(sharedSecret, CryptoPublicKey!);
-                    var authHash = Base64Helpers.ConvertToBase64Url(authHashBytes);
+                    var userPublicKey = ECDsa.Create();
+                    userPublicKey.ImportFromPem(userPublicKeyString);
 
-                    var url = $"{authServer}api/session/hasJoined?hash={authHash}&userId={msgEncResponse.UserId}";
-                    var joinedRespJson = await _http.Client.GetFromJsonAsync<HasJoinedResponse>(url);
+                    string jwtJsonString = "";
 
-                    if (joinedRespJson is not {IsValid: true})
+                    try
                     {
-                        connection.Disconnect("Failed to validate login");
+                        IJsonSerializer serializer = new JsonNetSerializer();
+                        IDateTimeProvider provider = new UtcDateTimeProvider();
+                        IJwtValidator validator = new JwtValidator(serializer, provider);
+                        IBase64UrlEncoder urlEncoder = new JwtBase64UrlEncoder();
+                        IJwtAlgorithm algorithm = new ES256Algorithm(userPublicKey);
+                        IJwtDecoder decoder = new JwtDecoder(serializer, validator, urlEncoder, algorithm);
+
+                        jwtJsonString = decoder.Decode(userJWTString);
+                    }
+                    catch (TokenNotYetValidException)
+                    {
+                        connection.Disconnect("JWT Validation Error - Token is not valid yet.");
+                        return;
+                    }
+                    catch (TokenExpiredException)
+                    {
+                        connection.Disconnect("JWT Validation Error - Token has expired.");
+                        return;
+                    }
+                    catch (SignatureVerificationException)
+                    {
+                        connection.Disconnect("JWT Validation Error - Token has invalid signature.");
+                        return;
+                    }
+                    catch (Exception e)
+                    {
+                        connection.Disconnect("Misc JWT Error.");
+                        _logger.Error("Misc JWT Error on user attempting to connect.", e);
                         return;
                     }
 
-                    _logger.Verbose(
-                        $"{connection.RemoteEndPoint}: Auth hash passed. " +
-                        $"User ID: {joinedRespJson.UserData!.UserId}, " +
-                        $"Username: {joinedRespJson.UserData!.UserName}," +
-                        $"Patron: {joinedRespJson.UserData.PatronTier}");
-
-                    var userId = new NetUserId(joinedRespJson.UserData!.UserId);
-                    userData = new NetUserData(userId, joinedRespJson.UserData.UserName)
+                    if (String.IsNullOrEmpty(jwtJsonString))
                     {
-                        PatronTier = joinedRespJson.UserData.PatronTier,
-                        HWId = msgLogin.HWId
-                    };
+                        connection.Disconnect("JWT Validation Error - No JSON in JWT.");
+                        return;
+                    }
+
+                    // Verify JWT is actually for this server
+                    JsonNode? jsonNode = JsonNode.Parse(jwtJsonString);
+
+                    if (jsonNode == null)
+                    {
+                        connection.Disconnect("JWT Validation Error - Bad/Missing JSON in JWT.");
+                        return;
+                    }
+
+                    bool verifyAudienceClaim = true;
+
+                    #if TOOLS
+                    // Dev builds can skip this for ease of testing purposes.
+                    verifyAudienceClaim = _config.GetCVar<bool>(CVars.AuthRequireAudienceClaim);
+                    #endif
+
+                    if (verifyAudienceClaim)
+                    {
+                        var audienceClaimNode = jsonNode["aud"];
+                        if (audienceClaimNode == null)
+                        {
+                            connection.Disconnect("JWT Validation Error - No audience claim in JWT.");
+                            return;
+                        }
+
+                        string signedForServerInJWT = audienceClaimNode.GetValue<string>();
+                        string serverSignatureBase64 = Convert.ToBase64String(CryptoPublicKey);
+                        if (signedForServerInJWT != serverSignatureBase64)
+                        {
+                            // It could just be that the server recently restarted and launcher has old key.
+                            connection.Disconnect("JWT Validation Error\nJWT appears to be for another server.\nTry returning to launcher and reconnect.");
+                            return;
+                        }
+                    }
+
+                    _logger.Verbose(
+                        $"{connection.RemoteEndPoint}: JWT appears valid");
+
+                    // Find user based on public key
+
+                    // Get public key in byte format.  This should be a bit more efficient than
+                    // doing lookups based on base64() keys, and by using the parsed ES256 object
+                    // it should prevent any issues about slightly differing PEM syntax, etc. resulting
+                    // in multiple versions of the same key.
+                    var userPublicKeyX509Der = userPublicKey.ExportSubjectPublicKeyInfo();
+                    var userPublicKeyImmutableBytes = userPublicKeyX509Der.ToImmutableArray();
+
+                    var serverUserDataAssociation = IoCManager.Resolve<IServerUserDataAssociation>();
+                    var associationResult = await serverUserDataAssociation.AttemptUserDataFromPublicKey(
+                        userPublicKeyImmutableBytes, msgLogin.HWId, msgLogin.PreferredUserName, ip);
+
+                    if (associationResult.success && associationResult.userData != null)
+                    {
+                        _logger.Verbose(
+                         $"{connection.RemoteEndPoint}: Content successfully found/created user data in AttemptUserDataFromPublicKey.");
+
+                         userData = associationResult.userData;
+                    }
+                    else
+                    {
+                        _logger.Verbose(
+                         $"{connection.RemoteEndPoint}: Disconnecting due to Content AttemptUserDataFromPublicKey failing ({associationResult.errorMessage})");
+
+                        connection.Disconnect($"There was a problem logging you in.  {associationResult.errorMessage}");
+                        return;
+                    }
+
                     padSuccessMessage = false;
                     type = LoginType.LoggedIn;
                 }
@@ -166,7 +261,7 @@ namespace Robust.Shared.Network
                     _logger.Verbose(
                         $"{connection.RemoteEndPoint}: Not doing authentication");
 
-                    var reqUserName = msgLogin.UserName;
+                    var reqUserName = msgLogin.PreferredUserName;
 
                     if (!UsernameHelpers.IsNameValid(reqUserName, out var reason))
                     {
@@ -199,7 +294,8 @@ namespace Robust.Shared.Network
 
                     userData = new NetUserData(userId, name)
                     {
-                        HWId = msgLogin.HWId
+                        HWId = msgLogin.HWId,
+                        PublicKey = ImmutableArray<byte>.Empty
                     };
                 }
 
