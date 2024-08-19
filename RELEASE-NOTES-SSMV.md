@@ -35,11 +35,13 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* MV Key Auth replaces WizDen auth.
 
 ### New features
 
-*None yet*
+* MV Key Auth.
+* VPN Block.
+* SCSI disabled unless environment variable set.
 
 ### Bugfixes
 
@@ -47,7 +49,7 @@ END TEMPLATE-->
 
 ### Other
 
-*None yet*
+* Backport image sharp newer version
 
 ### Internal
 
