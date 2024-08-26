@@ -18,7 +18,7 @@ Don't change the format without looking at the script!
 
 ### Bugfixes
 
-*None yet*
+* Include upstream security fix (#5353)
 
 ### Other
 
