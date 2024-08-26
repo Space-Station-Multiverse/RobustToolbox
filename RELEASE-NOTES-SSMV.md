@@ -54,6 +54,13 @@ END TEMPLATE-->
 *None yet*
 
 
+## mv-April2024-1.0.2
+
+### Bugfixes
+
+* Include upstream security fix (#5353)
+
+
 ## mv-April2024-1.0.1
 
 ### Breaking changes
