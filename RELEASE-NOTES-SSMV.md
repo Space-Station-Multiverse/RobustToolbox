@@ -43,7 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* Include upstream security fix (#5353)
 
 ### Other
 
@@ -52,6 +52,9 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 1.0.2
 
 
 ## 1.0.1
