@@ -138,6 +138,9 @@ namespace Robust.Shared.Network
                     if (msgLogin.Encrypt)
                         encryption = new NetEncryption(sharedSecret, isServer: true);
 
+                    var authHashBytes = MakeAuthHash(sharedSecret, CryptoPublicKey!);
+                    var authHash = Base64Helpers.ConvertToBase64Url(authHashBytes);
+
                     // Validate the JWT
                     var userPublicKeyString = msgEncResponse.UserPublicKey ?? "";
                     var userJWTString = msgEncResponse.UserJWT ?? "";
@@ -217,6 +220,23 @@ namespace Robust.Shared.Network
                         {
                             // It could just be that the server recently restarted and launcher has old key.
                             connection.Disconnect("JWT Validation Error\nJWT appears to be for another server.\nTry returning to launcher and reconnect.");
+                            return;
+                        }
+
+                        // Also verify authhash matches.
+                        // (This step helps deter a MITM/proxy attack, since even if traffic was proxied, it should also
+                        // be encrypted.)
+                        string authHashClaim = "";
+                        var authHashClaimNode = jsonNode["authhash"];
+                        if (authHashClaimNode == null)
+                        {
+                            connection.Disconnect("JWT Validation Error - No auth hash in JWT\n(Ensure you are using latest launcher version).");
+                            return;
+                        }
+                        authHashClaim = (string) authHashClaimNode.GetValue<string>();
+                        if (authHashClaim != authHash)
+                        {
+                            connection.Disconnect("JWT Validation Error - Wrong auth hash in JWT\n(Check server address is correct).");
                             return;
                         }
                     }

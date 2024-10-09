@@ -155,8 +155,30 @@ namespace Robust.Shared.Network
                 var encRequest = new MsgEncryptionRequest();
                 encRequest.ReadFromBuffer(response, _serializer);
 
-                var sharedSecret = new byte[SharedKeyLength];
-                RandomNumberGenerator.Fill(sharedSecret);
+                byte[] sharedSecret;
+
+                if (string.IsNullOrEmpty(_authManager.SharedSecretBase64))
+                {
+                    // Generate new shared secret in robust client
+                    sharedSecret = new byte[SharedKeyLength];
+                    RandomNumberGenerator.Fill(sharedSecret); // In order for this to work, server must not be verifying JWT
+                }
+                else
+                {
+                    // Use shared secret from launcher
+
+                    // (Robust client does not have direct access to the user's private key for safety.  The JWT needs to
+                    // include the authhash to avoid a MITM.  Thus, the launcher must generate the JWT and by extension
+                    // the shared secret.  Launcher will generate it and pass it to us in Base64 format.)
+                    sharedSecret = System.Convert.FromBase64String(_authManager.SharedSecretBase64);
+
+                    if (sharedSecret.Length != SharedKeyLength)
+                    {
+                        var msg = $"Invalid shared secret length from launcher. Expected {SharedKeyLength}, but was {sharedSecret.Length}.";
+                        connection.Disconnect(msg);
+                        throw new Exception(msg);
+                    }
+                }
 
                 if (encrypt)
                     encryption = new NetEncryption(sharedSecret, isServer: false);
