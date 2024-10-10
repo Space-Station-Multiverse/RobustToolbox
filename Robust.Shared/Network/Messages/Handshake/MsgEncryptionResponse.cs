@@ -15,6 +15,7 @@ namespace Robust.Shared.Network.Messages.Handshake
         public byte[] SealedData;
         public string UserJWT;
         public string UserPublicKey;
+        public ulong StartingNonce;
 
         public override void ReadFromBuffer(NetIncomingMessage buffer, IRobustSerializer serializer)
         {
@@ -23,6 +24,7 @@ namespace Robust.Shared.Network.Messages.Handshake
 
             UserJWT = buffer.ReadString();
             UserPublicKey = buffer.ReadString();
+            StartingNonce = buffer.ReadUInt64();
         }
 
         public override void WriteToBuffer(NetOutgoingMessage buffer, IRobustSerializer serializer)
@@ -32,6 +34,7 @@ namespace Robust.Shared.Network.Messages.Handshake
 
             buffer.Write(UserJWT);
             buffer.Write(UserPublicKey);
+            buffer.Write(StartingNonce);
         }
     }
 }

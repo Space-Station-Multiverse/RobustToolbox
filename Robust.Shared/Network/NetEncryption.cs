@@ -17,6 +17,18 @@ internal sealed class NetEncryption
     private ulong _nonce;
     private readonly byte[] _key;
 
+    /// <summary>
+    /// How much to offset noonce during reconnect.  Noonce+key combination should not be re-used per
+    /// https://doc.libsodium.org/secret-key_cryptography/aead/chacha20-poly1305/ietf_chacha20-poly1305_construction
+    ///   "The public nonce npub should never ever be reused with the same key. The recommended way to generate it is to
+    ///    use randombytes_buf() for the first message, and increment it for each subsequent message using the same key."
+    /// Since key is no longer randomly generated per connection, the noonce must be incremented.  Rather than just
+    /// set this to exactly where it left off, I am padding it a bit.  This is just in case there's some messages from
+    /// server -> client that the client never received.  This way, I push this much farther into the unused future for
+    /// safety.
+    /// </summary>
+    public const ulong RECONNECT_NOONCE_PADDING = 2000000;
+
     public NetEncryption(byte[] key, bool isServer)
     {
         if (key.Length != CryptoAeadXChaCha20Poly1305Ietf.KeyBytes)
@@ -118,5 +130,15 @@ internal sealed class NetEncryption
 
         if (!result)
             throw new SodiumException("Decryption operation failed!");
+    }
+
+    public void SetNonce(ulong newValue)
+    {
+        Interlocked.Exchange(ref _nonce, newValue);
+    }
+
+    public ulong GetNonce()
+    {
+        return Interlocked.Read(ref _nonce);
     }
 }

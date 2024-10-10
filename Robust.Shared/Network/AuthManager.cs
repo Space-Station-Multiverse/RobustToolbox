@@ -13,6 +13,7 @@ namespace Robust.Shared.Network
         string? ServerPublicKey { get; set; }
         string? UserPublicKey { get; set; }
         string? UserJWT { get; set; }
+        string? SharedSecretBase64 { get; set; }
 
         void LoadFromEnv();
     }
@@ -22,6 +23,7 @@ namespace Robust.Shared.Network
         public string? ServerPublicKey { get; set; }
         public string? UserPublicKey { get; set; }
         public string? UserJWT { get; set; }
+        public string? SharedSecretBase64 { get; set; }
 
         public void LoadFromEnv()
         {
@@ -38,6 +40,11 @@ namespace Robust.Shared.Network
             if (TryGetVar("ROBUST_USER_JWT", out var userJWT))
             {
                 UserJWT = userJWT;
+            }
+
+            if (TryGetVar("ROBUST_SHARED_SECRET", out var sharedSecretBase64))
+            {
+                SharedSecretBase64 = sharedSecretBase64;
             }
 
             static bool TryGetVar(string var, [NotNullWhen(true)] out string? val)
