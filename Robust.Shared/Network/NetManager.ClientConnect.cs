@@ -181,7 +181,12 @@ namespace Robust.Shared.Network
                 }
 
                 if (encrypt)
+                {
                     encryption = new NetEncryption(sharedSecret, isServer: false);
+
+                    if (_clientEncryption != null)
+                        encryption.SetNonce(_clientEncryption.GetNonce() + NetEncryption.RECONNECT_NOONCE_PADDING);
+                }
 
                 byte[] keyBytes;
                 if (hasServerPublicKey)
@@ -215,6 +220,9 @@ namespace Robust.Shared.Network
                     UserJWT = _authManager.UserJWT,
                     UserPublicKey = _authManager.UserPublicKey
                 };
+
+                if (encrypt && encryption != null)
+                    encryptionResponse.StartingNonce = encryption.GetNonce() + 1;
 
                 var outEncRespMsg = peer.Peer.CreateMessage();
                 encryptionResponse.WriteToBuffer(outEncRespMsg, _serializer);

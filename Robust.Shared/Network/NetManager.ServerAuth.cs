@@ -136,7 +136,10 @@ namespace Robust.Shared.Network
                     }
 
                     if (msgLogin.Encrypt)
+                    {
                         encryption = new NetEncryption(sharedSecret, isServer: true);
+                        encryption.SetNonce(msgEncResponse.StartingNonce);
+                    }
 
                     var authHashBytes = MakeAuthHash(sharedSecret, CryptoPublicKey!);
                     var authHash = Base64Helpers.ConvertToBase64Url(authHashBytes);
