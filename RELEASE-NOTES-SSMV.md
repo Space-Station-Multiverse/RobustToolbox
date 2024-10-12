@@ -43,7 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-* MITM Mitigation (#2)
+* Include upstream security fix (#5353)
 
 ### Other
 
@@ -52,6 +52,13 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 1.0.3
+
+### Bugfixes
+
+* MITM Mitigation (#2)
 
 
 ## 1.0.2
