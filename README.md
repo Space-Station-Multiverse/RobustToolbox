@@ -2,7 +2,20 @@
 
 Multiverse fork of Robust Toolbox.
 
-(Upstream info follows)
+## Resources specific to this fork
+
+* **[Feature Overview & Branch Information](https://spacestationmultiverse.com/mv-engine/)**
+* [Switching to this engine guide](https://spacestationmultiverse.com/how-to-switch-to-mv-engine/) for fork maintainers
+* [New cvars / config documentation](https://spacestationmultiverse.com/mv-engine-cvars-ccvars/)
+* [New command documentation](https://spacestationmultiverse.com/mv-engine-commands/)
+* [FAQ](https://spacestationmultiverse.com/faq-on-mv-engine/)
+
+* [News](https://spacestationmultiverse.com/travel-news/)
+* [Discord](https://spacestationmultiverse.com/discord)
+
+---
+
+*(Upstream info follows)*
 
 ---
 
