@@ -18,7 +18,7 @@ Don't change the format without looking at the script!
 
 ### Bugfixes
 
-* Include upstream security fix (#5353)
+*None yet*
 
 ### Other
 
@@ -43,7 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-* Include upstream security fix (#5353)
+*None yet*
 
 ### Other
 
