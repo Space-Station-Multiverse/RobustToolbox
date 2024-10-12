@@ -43,7 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-* MITM Mitigation (#2)
+*None yet*
 
 ### Other
 
@@ -52,6 +52,13 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## mv-April2024-1.0.3
+
+### Bugfixes
+
+* MITM Mitigation (#2)
 
 
 ## mv-April2024-1.0.2
