@@ -48,7 +48,6 @@ namespace Robust.Server.ServerStatus
                 // Content can override these if it wants (e.g. stealthmins).
                 ["name"] = _serverNameCache,
                 ["players"] = _playerManager.PlayerCount,
-                ["engine"] = buildInfo.EngineVersion // MV Launcher can filter based on engine
             };
 
             // MV launcher can display auth methods:
@@ -136,6 +135,7 @@ namespace Robust.Server.ServerStatus
 
             return new JsonObject
             {
+                ["engine"] = buildInfo.Engine,
                 ["engine_version"] = buildInfo.EngineVersion,
                 ["fork_id"] = buildInfo.ForkId,
                 ["version"] = buildInfo.Version,
@@ -162,6 +162,7 @@ namespace Robust.Server.ServerStatus
             }
             return new JsonObject
             {
+                ["engine"] = _cfg.GetCVar(CVars.BuildEngine),
                 ["engine_version"] = _cfg.GetCVar(CVars.BuildEngineVersion),
                 ["fork_id"] = fork,
                 ["version"] = acm.ManifestHash,
