@@ -48,6 +48,8 @@ namespace Robust.Server.ServerStatus
                 // Content can override these if it wants (e.g. stealthmins).
                 ["name"] = _serverNameCache,
                 ["players"] = _playerManager.PlayerCount,
+                ["engine_type"] = buildInfo.Engine,
+                ["engine"] = buildInfo.EngineVersion,
             };
 
             // MV launcher can display auth methods:
