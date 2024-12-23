@@ -619,7 +619,7 @@ namespace Robust.Shared
         /// Engine version that launcher needs to connect to this server.
         /// </summary>
         public static readonly CVarDef<string> BuildEngineVersion =
-            CVarDef.Create("build.engine_version", "mv-April2024-1.0.3");
+            CVarDef.Create("build.engine_version", "");
         // Can be auto-filled by build.json.  Upstream defaults to the version string, but MV wants to be able to have
         // build tags like mv-branchname-1.0.0
 
