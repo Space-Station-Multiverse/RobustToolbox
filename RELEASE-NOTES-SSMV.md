@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-* API provides additional information (engine type) to launcher (#3)
+*None yet*
 
 ### Bugfixes
 
@@ -52,6 +52,13 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## 1.0.4
+
+### New features
+
+* API provides additional information (engine type) to launcher (#3)
 
 
 ## 1.0.3
