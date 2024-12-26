@@ -39,7 +39,7 @@ END TEMPLATE-->
 
 ### New features
 
-*None yet*
+* API provides additional information (engine type) to launcher (Backport of #3)
 
 ### Bugfixes
 
