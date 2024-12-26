@@ -610,6 +610,12 @@ namespace Robust.Shared
          */
 
         /// <summary>
+        /// Engine type the launcher needs to connect to this server.
+        /// </summary>
+        public static readonly CVarDef<string> BuildEngineType =
+            CVarDef.Create("build.engine_type", "Multiverse");
+
+        /// <summary>
         /// Engine version that launcher needs to connect to this server.
         /// </summary>
         public static readonly CVarDef<string> BuildEngineVersion =
