@@ -7,6 +7,7 @@ internal sealed record GameBuildInformation(
     string? ZipHash,
     string? ZipDownload,
     string ForkId,
+    string EngineType,
     string Version,
     string? ManifestHash,
     string? ManifestUrl,
@@ -18,6 +19,7 @@ internal sealed record GameBuildInformation(
         var zipHash = cfg.GetCVar(CVars.BuildHash);
         var manifestHash = cfg.GetCVar(CVars.BuildManifestHash);
         var forkId = cfg.GetCVar(CVars.BuildForkId);
+        var engineType = cfg.GetCVar(CVars.BuildEngineType);
         var forkVersion = cfg.GetCVar(CVars.BuildVersion);
 
         var manifestDownloadUrl = Interpolate(cfg.GetCVar(CVars.BuildManifestDownloadUrl));
@@ -44,6 +46,7 @@ internal sealed record GameBuildInformation(
             zipHash,
             zipDownload,
             forkId,
+            engineType,
             forkVersion,
             manifestHash,
             manifestUrl,
