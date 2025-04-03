@@ -133,6 +133,7 @@ namespace Robust.UnitTesting
                                 var userData = new NetUserData(sessionId, userName)
                                 {
                                     HWId = ImmutableArray<byte>.Empty,
+                                    ModernHWIds = [],
                                     PublicKey = ImmutableArray<byte>.Empty
                                 };
 

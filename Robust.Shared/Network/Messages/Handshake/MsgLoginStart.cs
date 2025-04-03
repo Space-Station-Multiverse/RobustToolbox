@@ -30,7 +30,6 @@ namespace Robust.Shared.Network.Messages.Handshake
         {
             PreferredUserName = buffer.ReadString();
             var length = buffer.ReadByte();
-            HWId = ImmutableArray.Create(buffer.ReadBytes(length));
             CanAuth = buffer.ReadBoolean();
             NeedServerPublicKey = buffer.ReadBoolean();
             Encrypt = buffer.ReadBoolean();
@@ -40,7 +39,6 @@ namespace Robust.Shared.Network.Messages.Handshake
         {
             buffer.Write(PreferredUserName);
             buffer.Write((byte) HWId.Length);
-            buffer.Write(HWId.AsSpan());
             buffer.Write(CanAuth);
             buffer.Write(NeedServerPublicKey);
             buffer.Write(Encrypt);

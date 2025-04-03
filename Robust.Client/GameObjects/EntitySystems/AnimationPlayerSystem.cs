@@ -76,7 +76,8 @@ namespace Robust.Client.GameObjects
             foreach (var key in remie)
             {
                 component.PlayingAnimations.Remove(key);
-                EntityManager.EventBus.RaiseLocalEvent(uid, new AnimationCompletedEvent {Uid = uid, Key = key}, true);
+                var completedEvent = new AnimationCompletedEvent(uid, component, key, true);
+                EntityManager.EventBus.RaiseLocalEvent(uid, completedEvent, true);
             }
 
             return false;
@@ -96,15 +97,6 @@ namespace Robust.Client.GameObjects
         {
             component ??= EntityManager.EnsureComponent<AnimationPlayerComponent>(uid);
             Play(new Entity<AnimationPlayerComponent>(uid, component), animation, key);
-        }
-
-        /// <summary>
-        ///     Start playing an animation.
-        /// </summary>
-        [Obsolete("Use Play(EntityUid<AnimationPlayerComponent> ent, Animation animation, string key) instead")]
-        public void Play(AnimationPlayerComponent component, Animation animation, string key)
-        {
-            Play(new Entity<AnimationPlayerComponent>(component.Owner, component), animation, key);
         }
 
         public void Play(Entity<AnimationPlayerComponent> ent, Animation animation, string key)
@@ -151,6 +143,14 @@ namespace Robust.Client.GameObjects
             }
 #endif
 
+            foreach (var track in animation.AnimationTracks)
+            {
+                if (track is not AnimationTrackSpriteFlick)
+                    continue;
+
+                track.AdvancePlayback(ent.Owner, 0, 0, 0f);
+            }
+
             ent.Comp.PlayingAnimations.Add(key, playback);
         }
 
@@ -187,7 +187,8 @@ namespace Robust.Client.GameObjects
                 return;
             }
 
-            EntityManager.EventBus.RaiseLocalEvent(entity.Owner, new AnimationCompletedEvent {Uid = entity.Owner, Key = key}, true);
+            var completedEvent = new AnimationCompletedEvent(entity.Owner, entity.Comp, key, false);
+            EntityManager.EventBus.RaiseLocalEvent(entity.Owner, completedEvent, true);
         }
 
         public void Stop(EntityUid uid, AnimationPlayerComponent? component, string key)
@@ -201,7 +202,33 @@ namespace Robust.Client.GameObjects
     /// </summary>
     public sealed class AnimationCompletedEvent : EntityEventArgs
     {
+        /// <summary>
+        /// The entity associated with the event.
+        /// </summary>
         public EntityUid Uid { get; init; }
+
+        /// <summary>
+        /// The animation player component associated with the entity this event was raised on.
+        /// </summary>
+        public AnimationPlayerComponent AnimationPlayer { get; init; }
+
+        /// <summary>
+        /// The key associated with the animation that was completed.
+        /// </summary>
         public string Key { get; init; } = string.Empty;
+
+        /// <summary>
+        /// If true, the animation finished by getting to its natural end.
+        /// If false, it was removed prematurely via <see cref="AnimationPlayerSystem.Stop(EntityUid,AnimationPlayerComponent,string)"/> or similar overloads.
+        /// </summary>
+        public bool Finished { get; init; }
+
+        public AnimationCompletedEvent(EntityUid uid, AnimationPlayerComponent animationPlayer, string key, bool finished = true)
+        {
+            Uid = uid;
+            AnimationPlayer = animationPlayer;
+            Key = key;
+            Finished = finished;
+        }
     }
 }

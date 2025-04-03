@@ -23,9 +23,9 @@ namespace Robust.Client.Console.Commands
         {
             var wantName = args.Length > 0 ? args[0] : null;
 
-            var basePath = Path.GetDirectoryName(UserDataDir.GetUserDataDir(_gameController))!;
-            //var dbPath = Path.Combine(basePath, "launcher-ssmv", "settings.db");
-            var dbPath = Path.Combine(basePath, "Test61", "settings.db"); // TEMP
+            var basePath = UserDataDir.GetRootUserDataDir(_gameController);
+            var launcherDirName = Environment.GetEnvironmentVariable("SSMV_LAUNCHER_APPDATA_NAME") ?? "launcher";
+            var dbPath = Path.Combine(basePath, launcherDirName, "settings.db");
 
 #if USE_SYSTEM_SQLITE
             SQLitePCL.raw.SetProvider(new SQLitePCL.SQLite3Provider_sqlite3());

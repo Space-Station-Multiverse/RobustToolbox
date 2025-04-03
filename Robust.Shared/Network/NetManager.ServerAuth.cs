@@ -86,10 +86,12 @@ namespace Robust.Shared.Network
 
                     var verifyToken = new byte[4];
                     RandomNumberGenerator.Fill(verifyToken);
+                    var wantHwid = _config.GetCVar(CVars.NetHWId);
                     var msgEncReq = new MsgEncryptionRequest
                     {
                         PublicKey = needServerPublicKey ? CryptoPublicKey : Array.Empty<byte>(),
-                        VerifyToken = verifyToken
+                        VerifyToken = verifyToken,
+                        WantHwid = wantHwid
                     };
 
                     var outMsgEncReq = peer.Peer.CreateMessage();
@@ -247,6 +249,27 @@ namespace Robust.Shared.Network
                     _logger.Verbose(
                         $"{connection.RemoteEndPoint}: JWT appears valid");
 
+                    // Receive HWIds
+
+                    ImmutableArray<ImmutableArray<byte>> modernHWIds = [];
+                    /*
+                    [
+                        ..joinedRespJson.ConnectionData!.Hwids
+                            .Select(h => ImmutableArray.Create(Convert.FromBase64String(h)))
+                    ];
+                    */
+                    // As of 4/2/25, generation of modernHWIds is not implemented for MV, so this information is
+                    // currently unhandled.  In future, would need to create these by hashing against a *persistent*
+                    // server public key or similar strategy.  -- Skye)
+
+                    ImmutableArray<byte> legacyHwid = [..msgEncResponse.LegacyHwid];
+                    if (!wantHwid)
+                    {
+                        // If the client somehow sends a HWID even if we didn't ask for one, ignore it.
+                        modernHWIds = [];
+                        legacyHwid = [];
+                    }
+
                     // Find user based on public key
 
                     // Get public key in byte format.  This should be a bit more efficient than
@@ -317,7 +340,8 @@ namespace Robust.Shared.Network
 
                     userData = new NetUserData(userId, name)
                     {
-                        HWId = msgLogin.HWId,
+                        HWId = [],
+                        ModernHWIds = [],
                         PublicKey = ImmutableArray<byte>.Empty
                     };
                 }
@@ -478,8 +502,9 @@ namespace Robust.Shared.Network
         }
 
         // ReSharper disable ClassNeverInstantiated.Local
-        private sealed record HasJoinedResponse(bool IsValid, HasJoinedUserData? UserData);
+        private sealed record HasJoinedResponse(bool IsValid, HasJoinedUserData? UserData, HasJoinedConnectionData? ConnectionData);
         private sealed record HasJoinedUserData(string UserName, Guid UserId, string? PatronTier);
+        private sealed record HasJoinedConnectionData(string[] Hwids, float Trust);
         // ReSharper restore ClassNeverInstantiated.Local
     }
 }

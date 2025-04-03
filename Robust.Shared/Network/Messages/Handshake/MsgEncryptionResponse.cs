@@ -16,6 +16,7 @@ namespace Robust.Shared.Network.Messages.Handshake
         public string UserJWT;
         public string UserPublicKey;
         public ulong StartingNonce;
+        public byte[] LegacyHwid;
 
         public override void ReadFromBuffer(NetIncomingMessage buffer, IRobustSerializer serializer)
         {
@@ -25,6 +26,8 @@ namespace Robust.Shared.Network.Messages.Handshake
             UserJWT = buffer.ReadString();
             UserPublicKey = buffer.ReadString();
             StartingNonce = buffer.ReadUInt64();
+            var legacyHwidLength = buffer.ReadVariableInt32();
+            LegacyHwid = buffer.ReadBytes(legacyHwidLength);
         }
 
         public override void WriteToBuffer(NetOutgoingMessage buffer, IRobustSerializer serializer)
@@ -35,6 +38,8 @@ namespace Robust.Shared.Network.Messages.Handshake
             buffer.Write(UserJWT);
             buffer.Write(UserPublicKey);
             buffer.Write(StartingNonce);
+            buffer.WriteVariableInt32(LegacyHwid.Length);
+            buffer.Write(LegacyHwid);
         }
     }
 }

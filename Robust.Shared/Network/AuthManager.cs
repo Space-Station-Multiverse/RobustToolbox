@@ -15,6 +15,11 @@ namespace Robust.Shared.Network
         string? UserJWT { get; set; }
         string? SharedSecretBase64 { get; set; }
 
+        /// <summary>
+        /// If true, the user allows HWID information to be provided to servers.
+        /// </summary>
+        bool AllowHwid { get; set; }
+
         void LoadFromEnv();
     }
 
@@ -24,10 +29,11 @@ namespace Robust.Shared.Network
         public string? UserPublicKey { get; set; }
         public string? UserJWT { get; set; }
         public string? SharedSecretBase64 { get; set; }
+        public bool AllowHwid { get; set; } = true;
 
         public void LoadFromEnv()
         {
-            if (TryGetVar("ROBUST_AUTH_PUBKEY", out var pubKey)) // Server's public key
+           if (TryGetVar("ROBUST_AUTH_PUBKEY", out var pubKey)) // Server's public key
             {
                 ServerPublicKey = pubKey;
             }
@@ -45,6 +51,11 @@ namespace Robust.Shared.Network
             if (TryGetVar("ROBUST_SHARED_SECRET", out var sharedSecretBase64))
             {
                 SharedSecretBase64 = sharedSecretBase64;
+            }
+
+            if (TryGetVar("ROBUST_AUTH_ALLOW_HWID", out var allowHwid))
+            {
+                AllowHwid = allowHwid.Trim() == "1";
             }
 
             static bool TryGetVar(string var, [NotNullWhen(true)] out string? val)
