@@ -18,6 +18,8 @@ internal sealed class BasicHWId : IHWId
     {
         if (OperatingSystem.IsWindows())
             return GetWindowsHWid("Hwid");
+        else
+            return GetFileHWid(true); // Technically this was never supported for legacy upstream, but no reason not to add it while MV hasn't done modern version yet
 
         return [];
     }
@@ -29,7 +31,7 @@ internal sealed class BasicHWId : IHWId
         if (OperatingSystem.IsWindows())
             raw = GetWindowsHWid("Hwid2");
         else
-            raw = GetFileHWid();
+            raw = GetFileHWid(false);
 
         return [0, ..raw];
     }
@@ -61,10 +63,13 @@ internal sealed class BasicHWId : IHWId
         return newId;
     }
 
-    private byte[] GetFileHWid()
+    private byte[] GetFileHWid(bool legacy)
     {
         var path = UserDataDir.GetRootUserDataDir(_gameController);
         var hwidPath = Path.Combine(path, ".hwid");
+
+        if (legacy)
+            hwidPath += "-legacy";
 
         var value = ReadHWidFile(hwidPath);
         if (value != null)
