@@ -14,7 +14,7 @@ namespace Robust.Shared.Network;
 public interface IServerUserDataAssociation
 {
     public Task<AssociationResult> AttemptUserDataFromPublicKey(ImmutableArray<byte> publicKey,
-        ImmutableArray<byte> hWId, string requestedUserName, IPAddress connectingAddress);
+        ImmutableArray<byte> legacyHwid, string requestedUserName, IPAddress connectingAddress);
 
     public struct AssociationResult
     {
