@@ -19,7 +19,7 @@ namespace Robust.Client
         /// <summary>
         ///     Name the userdata directory will have.
         /// </summary>
-        public string UserDataDirectoryName { get; init; } = "Space Station 14";
+        public string UserDataDirectoryName { get; init; } = "Space Station Multiverse";
 
         /// <summary>
         ///     Name of the configuration file in the user data directory.
