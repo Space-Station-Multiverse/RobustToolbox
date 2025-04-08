@@ -28,7 +28,8 @@ namespace Robust.Shared.Network
         /// If any of these values match between two connections,
         /// it means the auth server believes them to be the same user.
         /// </remarks>
-        public ImmutableArray<ImmutableArray<byte>> ModernHWIds { get; init; }
+        public ImmutableArray<ImmutableArray<byte>> ModernHWIds { get; init; } = [];
+            // (Added a default init [] because it seems upstream code checks for length, but not null...? -- Skye)
 
         /// <summary>
         /// A trust value that reports the auth server's estimate of how likely this user is to be a malicious/suspicious account.
