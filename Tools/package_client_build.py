@@ -199,7 +199,7 @@ def build_linux(skip_build: bool, platform, name) -> None:
     print(Fore.GREEN + "Packaging %s client..." % rid + Style.RESET_ALL)
 
     client_zip = zipfile.ZipFile(
-        p("release", "Robust.Client_%s-x64.zip" % rid), "w",
+        p("release", "Robust.Client_%s.zip" % rid), "w",
         compression=zipfile.ZIP_DEFLATED,
         strict_timestamps=False # Was hitting this issue locally when building where dotnet is making files from 1979 for some reason -- Skye
         )
