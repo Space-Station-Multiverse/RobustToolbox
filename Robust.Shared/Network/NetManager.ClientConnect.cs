@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -132,14 +133,19 @@ namespace Robust.Shared.Network
             var hasServerPublicKey = !string.IsNullOrEmpty(serverPublicKey);
             var authenticate = !string.IsNullOrEmpty(userPublicKey) && !string.IsNullOrEmpty(userJWT);
 
-            byte[] legacyHwid = [];
+            ImmutableArray<byte> hwIdLegacy;
+            if (_authManager.AllowHwid)
+                hwIdLegacy = ImmutableArray.Create(_hwId.GetLegacy());
+            else
+                hwIdLegacy = ImmutableArray<byte>.Empty;
 
             var msgLogin = new MsgLoginStart
             {
                 PreferredUserName = userNameRequest,
                 CanAuth = authenticate,
                 NeedServerPublicKey = !hasServerPublicKey,
-                Encrypt = encrypt
+                Encrypt = encrypt,
+                HWIdLegacy = hwIdLegacy
             };
 
             var outLoginMsg = peer.Peer.CreateMessage();
@@ -215,6 +221,7 @@ namespace Robust.Shared.Network
 
                 var sealedData = CryptoBox.Seal(data, keyBytes);
 
+                byte[]? legacyHwid = null; // Somewhat duplicative to be doing this in two places, refactor in future
                 byte[]? modernHwid = null;
                 if (_authManager.AllowHwid && encRequest.WantHwid)
                 {
@@ -245,7 +252,7 @@ namespace Robust.Shared.Network
             var msgSuc = new MsgLoginSuccess();
             msgSuc.ReadFromBuffer(response, _serializer);
 
-            var channel = new NetChannel(this, connection, msgSuc.UserData with { HWId = [..legacyHwid] }, msgSuc.Type);
+            var channel = new NetChannel(this, connection, msgSuc.UserData with { HWId = [..hwIdLegacy.ToArray()] }, msgSuc.Type);
             _channels.Add(connection, channel);
             peer.AddChannel(channel);
 

@@ -281,7 +281,7 @@ namespace Robust.Shared.Network
 
                     var serverUserDataAssociation = IoCManager.Resolve<IServerUserDataAssociation>();
                     var associationResult = await serverUserDataAssociation.AttemptUserDataFromPublicKey(
-                        userPublicKeyImmutableBytes, msgLogin.HWId, msgLogin.PreferredUserName, ip);
+                        userPublicKeyImmutableBytes, legacyHwid, msgLogin.PreferredUserName, ip);
 
                     if (associationResult.success && associationResult.userData != null)
                     {
@@ -340,7 +340,7 @@ namespace Robust.Shared.Network
 
                     userData = new NetUserData(userId, name)
                     {
-                        HWId = [],
+                        HWId = msgLogin.HWIdLegacy,
                         ModernHWIds = [],
                         PublicKey = ImmutableArray<byte>.Empty
                     };

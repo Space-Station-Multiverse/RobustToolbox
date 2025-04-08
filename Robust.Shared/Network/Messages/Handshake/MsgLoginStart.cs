@@ -21,7 +21,7 @@ namespace Robust.Shared.Network.Messages.Handshake
         /// </summary>
         public string PreferredUserName;
 
-        public ImmutableArray<byte> HWId;
+        public ImmutableArray<byte> HWIdLegacy;
         public bool CanAuth;
         public bool NeedServerPublicKey;
         public bool Encrypt;
@@ -29,19 +29,36 @@ namespace Robust.Shared.Network.Messages.Handshake
         public override void ReadFromBuffer(NetIncomingMessage buffer, IRobustSerializer serializer)
         {
             PreferredUserName = buffer.ReadString();
-            var length = buffer.ReadByte();
             CanAuth = buffer.ReadBoolean();
             NeedServerPublicKey = buffer.ReadBoolean();
             Encrypt = buffer.ReadBoolean();
+
+            // Including legacy HW id here since guests don't send
+            // auth packets.  Technically means legacy HWID gets sent twice
+            // for authed users currently...
+            var legacyHwIdlength = buffer.ReadByte();
+            if (legacyHwIdlength > 0)
+            {
+                HWIdLegacy = ImmutableArray.Create(buffer.ReadBytes(legacyHwIdlength));
+            }
+            else
+                HWIdLegacy = ImmutableArray<byte>.Empty;
         }
 
         public override void WriteToBuffer(NetOutgoingMessage buffer, IRobustSerializer serializer)
         {
             buffer.Write(PreferredUserName);
-            buffer.Write((byte) HWId.Length);
             buffer.Write(CanAuth);
             buffer.Write(NeedServerPublicKey);
             buffer.Write(Encrypt);
+
+            if (HWIdLegacy != null && HWIdLegacy.Length > 0)
+            {
+                buffer.Write((byte) HWIdLegacy.Length);
+                buffer.Write(HWIdLegacy.AsSpan());
+            } else {
+                buffer.Write((byte) 0);
+            }
         }
     }
 }
