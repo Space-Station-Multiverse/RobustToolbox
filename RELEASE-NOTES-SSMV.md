@@ -47,12 +47,19 @@ END TEMPLATE-->
 
 ### Other
 
-* Data directory path now uses MV instead of 14
-* Added legacy HWID generation for linux & mac
+*None yet*
 
 ### Internal
 
 *None yet*
+
+
+## mv-April2025-1.0.5
+
+### Other
+
+* Data directory path now uses MV instead of 14
+* Added legacy HWID generation for linux & mac
 
 
 ## mv-April2025-1.0.4
