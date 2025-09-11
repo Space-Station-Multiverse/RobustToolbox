@@ -33,11 +33,6 @@ END TEMPLATE-->
 
 ## Master
 
-This should actually be 1.0.5 since it contains the following prior 1.0.5 changes:
-
-* Data directory path now uses MV instead of 14
-* Added legacy HWID generation for linux & mac
-
 ### Breaking changes
 
 *None yet*
@@ -57,6 +52,14 @@ This should actually be 1.0.5 since it contains the following prior 1.0.5 change
 ### Internal
 
 *None yet*
+
+
+## mv-May2025-1.0.5
+
+This should actually be 1.0.5 since it contains the following prior 1.0.5 changes:
+
+* Data directory path now uses MV instead of 14
+* Added legacy HWID generation for linux & mac
 
 
 ## mv-May2025-1.0.4
