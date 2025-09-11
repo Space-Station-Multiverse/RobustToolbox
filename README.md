@@ -12,6 +12,7 @@ Multiverse fork of Robust Toolbox.
 
 * [News](https://spacestationmultiverse.com/travel-news/)
 * [Discord](https://spacestationmultiverse.com/discord)
+* [Forum / ChatRoom](https://spacestation.forum)
 
 ---
 
