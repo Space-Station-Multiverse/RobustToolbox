@@ -33,6 +33,11 @@ END TEMPLATE-->
 
 ## Master
 
+This should actually be 1.0.5 since it contains the following prior 1.0.5 changes:
+
+* Data directory path now uses MV instead of 14
+* Added legacy HWID generation for linux & mac
+
 ### Breaking changes
 
 *None yet*
