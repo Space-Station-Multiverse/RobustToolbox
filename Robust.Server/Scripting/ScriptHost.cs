@@ -205,13 +205,20 @@ namespace Robust.Server.Scripting
             }
 
             // Compile ahead of time so that we can do syntax highlighting correctly for the echo.
-            newScript.Compile();
+            await Task.Run(() =>
+            {
+                newScript.Compile();
 
-            // Echo entered script.
-            var echoMessage = new FormattedMessage();
-            ScriptInstanceShared.AddWithSyntaxHighlighting(newScript, echoMessage, code, instance.HighlightWorkspace);
+                // Echo entered script.
+                var echoMessage = new FormattedMessage();
+                ScriptInstanceShared.AddWithSyntaxHighlighting(
+                    newScript,
+                    echoMessage,
+                    code,
+                    instance.HighlightWorkspace.Value);
 
-            replyMessage.Echo = echoMessage;
+                replyMessage.Echo = echoMessage;
+            });
 
             var msg = new FormattedMessage();
 
@@ -349,7 +356,7 @@ namespace Robust.Server.Scripting
 
         private sealed class ScriptInstance
         {
-            public Workspace HighlightWorkspace { get; } = new AdhocWorkspace();
+            public Lazy<Workspace> HighlightWorkspace { get; } = new(() => new AdhocWorkspace());
             public StringBuilder InputBuffer { get; } = new();
             public FormattedMessage OutputBuffer { get; } = new();
             public bool RunningScript { get; set; }
@@ -390,7 +397,7 @@ namespace Robust.Server.Scripting
                     script.Compile();
 
                     var syntax = new FormattedMessage();
-                    ScriptInstanceShared.AddWithSyntaxHighlighting(script, syntax, code, _scriptInstance.HighlightWorkspace);
+                    ScriptInstanceShared.AddWithSyntaxHighlighting(script, syntax, code, _scriptInstance.HighlightWorkspace.Value);
 
                     _scriptInstance.OutputBuffer.AddMessage(syntax);
                 }
