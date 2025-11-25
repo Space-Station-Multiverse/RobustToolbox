@@ -54,7 +54,7 @@ END TEMPLATE-->
 *None yet*
 
 
-## mv-November2025-1.0.4
+## mv-November2025-1.0.5
 
 * Upstream Robust merge v268.0.0
 
