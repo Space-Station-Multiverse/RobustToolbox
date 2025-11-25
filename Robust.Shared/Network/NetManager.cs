@@ -828,6 +828,10 @@ namespace Robust.Shared.Network
             _assignedUsernames.Remove(channel.UserName);
             _assignedUserIds.Remove(channel.UserId);
 
+            _channels.Remove(connection);
+            peer.RemoveChannel(channel);
+            channel.EncryptionChannel?.Complete();
+
 #if EXCEPTION_TOLERANCE
             try
             {
@@ -843,9 +847,6 @@ namespace Robust.Shared.Network
                 _logger.Error("Caught exception in OnDisconnected handler:\n{0}", e);
             }
 #endif
-            _channels.Remove(connection);
-            peer.RemoveChannel(channel);
-            channel.EncryptionChannel?.Complete();
 
             if (IsClient)
             {
@@ -1106,7 +1107,10 @@ namespace Robust.Shared.Network
 
             // not connected to a server, so a message cannot be sent to it.
             if (!IsConnected)
+            {
+                _logger.Error($"Tried to send message while not connected to a server: {message}\n{Environment.StackTrace}");
                 return;
+            }
 
             DebugTools.Assert(_netPeers.Count == 1);
             DebugTools.Assert(_netPeers[0].Channels.Count == 1);
