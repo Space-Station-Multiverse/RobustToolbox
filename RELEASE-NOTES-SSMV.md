@@ -43,7 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-*None yet*
+* Fix exception not being logged for 'Misc JWT Error'
 
 ### Other
 
