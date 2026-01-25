@@ -182,7 +182,7 @@ namespace Robust.Shared.Network
                     catch (Exception e)
                     {
                         connection.Disconnect("Misc JWT Error.");
-                        _logger.Error("Misc JWT Error on user attempting to connect.", e);
+                        _logger.Error($"Misc JWT Error on user attempting to connect.  Exception:  {e}");
                         return;
                     }
 
