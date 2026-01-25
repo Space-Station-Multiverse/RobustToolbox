@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 
-# Tools/version.py 1.2.3
+# Tools/version.py April2024 1.2.3
+
+# This version of the script adds support for engine branches
+# mv-April2024-1.0.0 is April2024 backports branch
 
 import subprocess
 import sys
@@ -11,6 +14,7 @@ from typing import List
 
 def main():
     parser = argparse.ArgumentParser(description = "Tool for versioning RobustToolbox: commits the version config update and sets your local tag.")
+    parser.add_argument("branch", help = "Branch that will be written to tag. Ex: April2024")
     parser.add_argument("version", help = "Version that will be written to tag. Format: x.x.x")
     parser.add_argument("--file-only", action = "store_true", help = "Does not perform the Git part of the update (for writes only, not undos!)")
     parser.add_argument("--undo", action = "store_true", help = "Macro to rebase over last commit and remove version tag. Version still required.")
@@ -18,17 +22,24 @@ def main():
     result = parser.parse_args()
 
     version:   str  = result.version
+    branch:    str  = result.branch
     undo:      bool = result.undo
     file_only: bool = result.file_only
 
+    tagName = "mv-" + branch + "-" + version
+
+    if branch == None:
+        print("Branch required in this version of script (try --help)")
+        sys.exit(1)
+
     if undo:
-        undo_version(version)
+        undo_version(tagName)
     else:
-        write_version(version, file_only)
+        write_version(version, file_only, tagName)
 
 
 def verify_version(version: str):
-    parts = version.split(".")
+    parts = version.split("-")[0].split(".")
     if len(parts) != 3:
         print("Version must be split into three parts with '.'")
         sys.exit(1)
@@ -36,7 +47,7 @@ def verify_version(version: str):
         # this verifies parsability, exceptions here are expected for bad input
         int(v)
 
-def write_version(version: str, file_only: bool):
+def write_version(version: str, file_only: bool, tagName:bool):
     # Writing operation
     if version == None:
         print("Version required for a writing operation (try --help)")
@@ -45,7 +56,11 @@ def write_version(version: str, file_only: bool):
     # Verify
     verify_version(version)
 
-    update_release_notes(version)
+    if tag_exists(version):
+        print(f"Version tag already exists: v{version}")
+        sys.exit(1)
+
+    update_release_notes(tagName)
 
     # Update
     with open("MSBuild/Robust.Engine.Version.props", "w") as file:
@@ -59,13 +74,13 @@ def write_version(version: str, file_only: bool):
         subprocess.run(["git", "commit", "--allow-empty", "-m", "Version: " + version, "MSBuild/Robust.Engine.Version.props", "RELEASE-NOTES-SSMV.md"], check=True)
 
         # Tag
-        subprocess.run(["git", "tag", "mv-" + version], check=True)
-        print("Tagged as mv-" + version)
+        subprocess.run(["git", "tag", tagName], check=True)
+        print("Tagged as " + tagName)
     else:
-        print("Did not tag " + version)
+        print("Did not tag " + tagName)
 
 
-def update_release_notes(version: str):
+def update_release_notes(tagName: str):
     with open("RELEASE-NOTES-SSMV.md", "r") as file:
         lines = file.readlines()
 
@@ -87,7 +102,7 @@ def update_release_notes(version: str):
         i -= 3
 
     # Replace current "master" header with the new version to tag.
-    lines[master_header] = f"## {version}\n"
+    lines[master_header] = f"## {tagName}\n"
 
     # Insert template above newest version.
     lines[master_header : master_header] = template_lines
@@ -96,19 +111,27 @@ def update_release_notes(version: str):
         file.writelines(lines)
 
 
-def undo_version(version: str):
+def undo_version(tagName: str):
     # Might want to work out some magic here to auto-identify the version from the commit
     if version == None:
         print("Version required for undo operation (try --help)")
         sys.exit(1)
 
+    if branch == None:
+        print("branch required for undo operation (try --help)")
+        sys.exit(1)
+
     # Delete the version (good verification all by itself really)
-    subprocess.run(["git", "tag", "-d", "mv-" + version], check=True)
+    subprocess.run(["git", "tag", "-d", tagName], check=True)
     # Tag the commit we're about to delete because we could be deleting the wrong thing.
     savename = "version-undo-backup-" + str(int(time.time()))
     subprocess.run(["git", "tag", savename], check=True)
     # *Outright eliminate the commit from the branch!* - Dangerous if we get rid of the wrong commit, hence backup
     subprocess.run(["git", "reset", "--keep", "HEAD^"], check=True)
     print("Done (deleted commit saved as " + savename + ")")
+
+def tag_exists(version: str):
+    result = subprocess.run(["git", "tag", "-l", "v" + version], stdout=subprocess.PIPE, encoding="utf-8")
+    return bool(result.stdout.strip())
 
 main()
