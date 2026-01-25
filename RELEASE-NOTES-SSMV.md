@@ -43,7 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-* Fix exception not being logged for 'Misc JWT Error'
+*None yet*
 
 ### Other
 
@@ -52,6 +52,13 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## mv-June2024-1.0.5
+
+### Bugfixes
+
+* Fix exception not being logged for 'Misc JWT Error'
 
 
 ## 1.0.4
