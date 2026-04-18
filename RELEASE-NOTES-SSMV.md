@@ -54,6 +54,9 @@ END TEMPLATE-->
 *None yet*
 
 
+## mv-November2025-1.0.6
+
+
 ## mv-November2025-1.0.5
 
 ### Breaking changes
