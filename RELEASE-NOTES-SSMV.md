@@ -35,7 +35,8 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-*None yet*
+* Fixes dotnet 10 breaking backwards compatability by backporting upstream's #6301.
+  (This change is needed for a dotnet 10 launcher to use older RT/MV engines)
 
 ### New features
 
