@@ -33,8 +33,6 @@ END TEMPLATE-->
 
 ## Master
 
-* Upstream Robust merge v275.2.0 (dotnet 10)
-
 ### Breaking changes
 
 *None yet*
@@ -45,7 +43,7 @@ END TEMPLATE-->
 
 ### Bugfixes
 
-* Fix exception not being logged for 'Misc JWT Error'
+*None yet*
 
 ### Other
 
@@ -54,6 +52,15 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## mv-April2026-1.0.6
+
+* Upstream Robust merge v275.2.0 (dotnet 10)
+
+### Bugfixes
+
+* Fix exception not being logged for 'Misc JWT Error'
 
 
 ## mv-November2025-1.0.5
