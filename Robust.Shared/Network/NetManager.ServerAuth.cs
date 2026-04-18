@@ -503,7 +503,7 @@ namespace Robust.Shared.Network
 
         // ReSharper disable ClassNeverInstantiated.Local
         private sealed record HasJoinedResponse(bool IsValid, HasJoinedUserData? UserData, HasJoinedConnectionData? ConnectionData);
-        private sealed record HasJoinedUserData(string UserName, Guid UserId, string? PatronTier);
+        private sealed record HasJoinedUserData(string UserName, Guid UserId, string? PatronTier, DateTime CreatedTime);
         private sealed record HasJoinedConnectionData(string[] Hwids, float Trust);
         // ReSharper restore ClassNeverInstantiated.Local
     }
