@@ -35,8 +35,7 @@ END TEMPLATE-->
 
 ### Breaking changes
 
-* Fixes dotnet 10 breaking backwards compatability by backporting upstream's #6301.
-  (This change is needed for a dotnet 10 launcher to use older RT/MV engines)
+*None yet*
 
 ### New features
 
@@ -53,6 +52,14 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## mv-November2025-1.0.5
+
+### Breaking changes
+
+* Fixes dotnet 10 breaking backwards compatability by backporting upstream's #6301.
+  (This change is needed for a dotnet 10 launcher to use older RT/MV engines)
 
 
 ## mv-November2025-1.0.5
