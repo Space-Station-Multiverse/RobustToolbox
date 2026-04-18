@@ -62,19 +62,15 @@ END TEMPLATE-->
   (This change is needed for a dotnet 10 launcher to use older RT/MV engines)
 
 
-## mv-April2025-1.0.4
+## mv-April2025-1.0.5
+
+### Other
+
+* Data directory path now uses MV instead of 14
+* Added legacy HWID generation for linux & mac
 
 
-## mv-April2025-1.0.4
-
-
-## mv-April2025-1.0.4
-
-
-## mv-April2025-1.0.4
-
-
-## 1.0.4
+## mv-April2025-1.0.4 / 1.0.4
 
 ### New features
 
