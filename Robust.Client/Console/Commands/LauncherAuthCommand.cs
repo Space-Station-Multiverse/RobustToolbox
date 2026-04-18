@@ -105,51 +105,6 @@ namespace Robust.Client.Console.Commands
         private SqliteConnection GetDb()
         {
             var basePath = UserDataDir.GetRootUserDataDir(_gameController);
-            var launcherDirName = Environment.GetEnvironmentVariable("SS14_LAUNCHER_APPDATA_NAME") ?? "launcher";
-            var dbPath = Path.Combine(basePath, launcherDirName, "settings.db");
-
-#if USE_SYSTEM_SQLITE
-            SQLitePCL.raw.SetProvider(new SQLitePCL.SQLite3Provider_sqlite3());
-#endif
-            var con = new SqliteConnection($"Data Source={dbPath};Mode=ReadOnly");
-            con.Open();
-
-            return con;
-        }
-
-        public override async ValueTask<CompletionResult> GetCompletionAsync(
-            IConsoleShell shell,
-            string[] args,
-            string argStr,
-            CancellationToken cancel)
-        {
-            if (args.Length != 1)
-                return CompletionResult.Empty;
-
-            return await Task.Run(() =>
-                {
-                    using var con = GetDb();
-
-                    using var cmd = con.CreateCommand();
-                    cmd.CommandText = "SELECT UserName FROM Login WHERE Expires > datetime('NOW')";
-
-                    var options = new List<CompletionOption>();
-
-                    using var reader = cmd.ExecuteReader();
-                    while (reader.Read())
-                    {
-                        var name = reader.GetString(0);
-                        options.Add(new CompletionOption(name));
-                    }
-
-                    return CompletionResult.FromOptions(options);
-                },
-                cancel);
-        }
-
-        private SqliteConnection GetDb()
-        {
-            var basePath = UserDataDir.GetRootUserDataDir(_gameController);
             var launcherDirName = Environment.GetEnvironmentVariable("SSMV_LAUNCHER_APPDATA_NAME") ?? "launcher";
             var dbPath = Path.Combine(basePath, launcherDirName, "settings.db");
 
