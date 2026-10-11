@@ -289,6 +289,7 @@ namespace Robust.Shared.Network
                          $"{connection.RemoteEndPoint}: Content successfully found/created user data in AttemptUserDataFromPublicKey.");
 
                          userData = associationResult.userData;
+                         userData.IsLocal = isLocal;
                     }
                     else
                     {
@@ -338,11 +339,16 @@ namespace Robust.Shared.Network
                     _logger.Verbose(
                         $"{connection.RemoteEndPoint}: Assigned user ID: {userId}");
 
+                    var localTrust = _config.GetCVar(CVars.AuthLocalTrust);
+                    var guestTrust = _config.GetCVar(CVars.AuthGuestTrust);
+
                     userData = new NetUserData(userId, name)
                     {
                         HWId = msgLogin.HWIdLegacy,
                         ModernHWIds = [],
-                        PublicKey = ImmutableArray<byte>.Empty
+                        PublicKey = ImmutableArray<byte>.Empty,
+                        Trust = isLocal ? localTrust : guestTrust,
+                        IsLocal = isLocal
                     };
                 }
 
