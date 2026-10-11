@@ -281,7 +281,7 @@ namespace Robust.Shared.Network
 
                     var serverUserDataAssociation = IoCManager.Resolve<IServerUserDataAssociation>();
                     var associationResult = await serverUserDataAssociation.AttemptUserDataFromPublicKey(
-                        userPublicKeyImmutableBytes, legacyHwid, msgLogin.PreferredUserName, ip);
+                        userPublicKeyImmutableBytes, legacyHwid, msgLogin.PreferredUserName, ip, isLocal);
 
                     if (associationResult.success && associationResult.userData != null)
                     {
@@ -289,7 +289,6 @@ namespace Robust.Shared.Network
                          $"{connection.RemoteEndPoint}: Content successfully found/created user data in AttemptUserDataFromPublicKey.");
 
                          userData = associationResult.userData;
-                         userData.IsLocal = isLocal;
                     }
                     else
                     {
