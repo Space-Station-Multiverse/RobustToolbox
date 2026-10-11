@@ -33,8 +33,6 @@ END TEMPLATE-->
 
 ## Master
 
-* Upstream Robust merge v289.0.3
-
 ### Breaking changes
 
 *None yet*
@@ -54,6 +52,11 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## mv-October2026-1.0.6
+
+* Upstream Robust merge v289.0.3
 
 
 ## mv-April2026-1.0.6
