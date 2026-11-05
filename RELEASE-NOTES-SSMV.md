@@ -57,7 +57,6 @@ END TEMPLATE-->
 
 *None yet*
 
-
 ## mv-August2025-1.0.6
 
 ### Breaking changes
