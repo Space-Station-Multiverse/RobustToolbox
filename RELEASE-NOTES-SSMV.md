@@ -33,10 +33,6 @@ END TEMPLATE-->
 
 ## Master
 
-### Security
-
-* Ports in upstream's fixes for denial of service bugs GHSA-m25p-v44q-gjqq & GHSA-p2x8-62mc-hwr6.  Some content-side changes are needed as bounds checking must be performed and they moved the location of NetSerializer, see their github security advisories for details.
-
 ### Breaking changes
 
 *None yet*
@@ -56,6 +52,13 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## mv-August2025-1.0.7
+
+### Security
+
+* Ports in upstream's fixes for denial of service bugs GHSA-m25p-v44q-gjqq & GHSA-p2x8-62mc-hwr6.  Some content-side changes are needed as bounds checking must be performed and they moved the location of NetSerializer, see their github security advisories for details.
 
 ## mv-August2025-1.0.6
 
