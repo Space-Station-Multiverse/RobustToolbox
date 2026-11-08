@@ -33,8 +33,6 @@ END TEMPLATE-->
 
 ## Master
 
-* Ports in upstream's fixes for denial of service bug GHSA-x84h-phgm-gq38
-
 ### Breaking changes
 
 *None yet*
@@ -54,6 +52,11 @@ END TEMPLATE-->
 ### Internal
 
 *None yet*
+
+
+## mv-August2025-1.0.8
+
+* Ports in upstream's fixes for denial of service bug GHSA-x84h-phgm-gq38
 
 
 ## mv-August2025-1.0.7
