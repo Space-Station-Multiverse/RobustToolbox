@@ -35,7 +35,7 @@ END TEMPLATE-->
 
 ### Security
 
-* Ports in upstream's fixes for denial of service bugs GHSA-m25p-v44q-gjqq & GHSA-p2x8-62mc-hwr6.  Some content-side changes are needed as bounds checking must be performed and they moved the location of NetSerializer, see their github security advisories for details.
+* Ports in upstream's fixes for denial of service bug GHSA-x84h-phgm-gq38
 
 ### Breaking changes
 
@@ -60,11 +60,7 @@ END TEMPLATE-->
 
 ## mv-October2026-1.0.7
 
-### Security
-
 * Ports in upstream's fixes for denial of service bugs GHSA-m25p-v44q-gjqq & GHSA-p2x8-62mc-hwr6.  Some content-side changes are needed as bounds checking must be performed and they moved the location of NetSerializer, see their github security advisories for details.
-* Also went ahead and updated ImageSharp to 3.2.0, which likely has no practical security impact for SS14 but makes dotnet restore stop complaining about it.
-
 
 ## mv-October2026-1.0.6
 
